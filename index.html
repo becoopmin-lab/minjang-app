@@ -1651,19 +1651,53 @@ let cloudBin=localStorage.getItem(CLOUD_BIN_STORE)||DEFAULT_BIN_ID;
 let syncTimer=null;
 
 function initCloud(){
-  // Bin ID 항상 최신으로 유지
   if(!localStorage.getItem(CLOUD_BIN_STORE)){
     localStorage.setItem(CLOUD_BIN_STORE, DEFAULT_BIN_ID);
     cloudBin=DEFAULT_BIN_ID;
   }
   if(cloudKey){
     showCloudConnected();
-    // 앱 열 때마다 자동으로 클라우드에서 불러오기
-    cloudLoad();
+    // 앱 열 때 자동 동기화 - 클라우드와 로컬 타임스탬프 비교
+    autoSyncCloud();
   }else{
     showCloudNotSetup();
   }
   updateCloudCounts();
+}
+
+async function autoSyncCloud(){
+  // 로컬 마지막 수정 시간
+  const localTs=parseInt(localStorage.getItem('mj_local_ts')||'0');
+  // 클라우드에서 타임스탬프만 확인
+  try{
+    const res=await fetch('https://api.jsonbin.io/v3/b/'+cloudBin+'/latest',{
+      headers:{'X-Master-Key':cloudKey}
+    });
+    if(!res.ok)return;
+    const json=await res.json();
+    const data=json.record;
+    if(!data)return;
+    const cloudTs=data.savedAt||0;
+    if(cloudTs>localTs){
+      // 클라우드가 더 최신 → 클라우드에서 불러오기
+      if(data.todos){allTodos=data.todos;SS(K.todos,allTodos);}
+      if(data.exps){exps=data.exps;SS(K.exps,exps);}
+      if(data.schedules){schedules=data.schedules;SS(K.scheds,schedules);}
+      if(typeof data.streak==='number'){streak=data.streak;SS(K.streak,streak);}
+      if(data.routineToday){rState=data.routineToday;SS(K.routine(todayStr()),rState);}
+      if(data.routineList){RM=data.routineList;SS('mj_v2_routine_list',RM);}
+      if(data.fixedExps){fixedExps=data.fixedExps;saveFixed();}
+      localStorage.setItem('mj_local_ts', String(cloudTs));
+      renderTodos();renderExps();renderRoutine();updateCloudCounts();
+      const el=document.getElementById('cloud-last-sync');
+      if(el)el.textContent='자동 동기화 완료';
+    }else{
+      // 로컬이 더 최신 또는 같음 → 클라우드에 저장
+      await cloudSync(false);
+    }
+  }catch(e){
+    console.log('Auto sync failed:', e.message);
+  }
 }
 
 function showCloudConnected(){
@@ -1733,10 +1767,10 @@ async function cloudSync(manual=false){
   }
 }
 
-async function cloudLoad(){
+async function cloudLoad(silent=false){
   if(!cloudKey||!cloudBin)return;
   const btn=document.querySelector('#cloud-connected .bk-import');
-  if(btn){btn.textContent='불러오는 중...';btn.disabled=true;}
+  if(btn&&!silent){btn.textContent='불러오는 중...';btn.disabled=true;}
   try{
     const res=await fetch('https://api.jsonbin.io/v3/b/'+cloudBin+'/latest',{
       headers:{'X-Master-Key':cloudKey}
@@ -1745,7 +1779,6 @@ async function cloudLoad(){
     const json=await res.json();
     const data=json.record;
     if(!data||!data.todos)throw new Error('데이터 없음');
-    // Restore
     if(data.todos){allTodos=data.todos;SS(K.todos,allTodos);}
     if(data.exps){exps=data.exps;SS(K.exps,exps);}
     if(data.schedules){schedules=data.schedules;SS(K.scheds,schedules);}
@@ -1755,12 +1788,14 @@ async function cloudLoad(){
     if(data.fixedExps){fixedExps=data.fixedExps;saveFixed();}
     renderTodos();renderExps();renderRoutine();updateCloudCounts();
     const el=document.getElementById('cloud-last-sync');
-    if(el)el.textContent='방금 불러옴';
-    alert('✅ 클라우드에서 불러왔어요!');
+    const now=new Date();
+    const timeStr=(now.getHours())+':'+String(now.getMinutes()).padStart(2,'0');
+    if(el)el.textContent='자동 불러옴 '+timeStr;
+    if(!silent)alert('✅ 클라우드에서 불러왔어요!');
   }catch(e){
-    alert('❌ 불러오기 실패: '+e.message);
+    if(!silent)alert('❌ 불러오기 실패: '+e.message);
   }
-  if(btn){btn.textContent='📥 클라우드에서 불러오기';btn.disabled=false;}
+  if(btn&&!silent){btn.textContent='📥 클라우드에서 불러오기';btn.disabled=false;}
 }
 
 function disconnectCloud(){
@@ -1791,15 +1826,19 @@ function updateCloudSync(){updateCloudCounts();}
 
 /* ══ BACKUP / RESTORE ══ */
 function getAllBackupData(){
+  const ts=Date.now();
+  localStorage.setItem('mj_local_ts', String(ts));
   return {
     version:2,
     exportedAt:new Date().toISOString(),
+    savedAt:ts,
     todos:allTodos,
     exps:exps,
     schedules:schedules,
     streak:streak,
     routineToday:rState,
-    routineList:RM
+    routineList:RM,
+    fixedExps:fixedExps
   };
 }
 
