@@ -611,7 +611,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
           <div style="flex:1;font-size:12px;color:#666666">클라우드 자동 저장 중</div>
           <div style="font-size:11px;color:#999999" id="cloud-last-sync">—</div>
         </div>
-        <div id="cloud-not-setup" style="padding:12px 0">
+        <div id="cloud-not-setup" style="padding:12px 0;display:none">
           <div style="font-size:13px;color:#111111;font-weight:700;margin-bottom:6px">설정 방법 (1분)</div>
           <div style="font-size:12px;color:#666666;line-height:1.7;margin-bottom:14px">
             1. <a href="https://jsonbin.io" target="_blank" style="color:#1a9e60">jsonbin.io</a> 접속 → 무료 가입<br>
@@ -1642,178 +1642,115 @@ function saveSchedule(){
 }
 
 /* ══ CLOUD SYNC (JSONBin.io) ══ */
-const CLOUD_KEY_STORE='mj_cloud_key';
-const CLOUD_BIN_STORE='mj_cloud_bin';
-const DEFAULT_BIN_ID='69d5c8eeaaba882197d56798';
-const DEFAULT_KEY='$2a$10$Rgojg02iDHtDH55Gp49CCuuhoTh5MoQOpJ3TYq.ql1x6sJA5vi0ge';
-// 자동으로 키와 Bin ID 설정
-if(!localStorage.getItem(CLOUD_KEY_STORE))localStorage.setItem(CLOUD_KEY_STORE,DEFAULT_KEY);
-if(!localStorage.getItem(CLOUD_BIN_STORE))localStorage.setItem(CLOUD_BIN_STORE,DEFAULT_BIN_ID);
-let cloudKey=localStorage.getItem(CLOUD_KEY_STORE)||DEFAULT_KEY;
-let cloudBin=localStorage.getItem(CLOUD_BIN_STORE)||DEFAULT_BIN_ID;
+/* ══ FIREBASE REALTIME SYNC ══ */
+// Firebase 설정
+const FB_API = 'https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents/minjang_app/user_data';
+const FB_API_KEY = 'AIzaSyClE-7P_ENLUvsUTsUmJ_BH9Du01jvWn-4';
+
 let syncTimer=null;
+let cloudKey='firebase';
+let cloudBin='firebase';
 
 function initCloud(){
-  if(!localStorage.getItem(CLOUD_BIN_STORE)){
-    localStorage.setItem(CLOUD_BIN_STORE, DEFAULT_BIN_ID);
-    cloudBin=DEFAULT_BIN_ID;
-  }
-  if(cloudKey){
-    showCloudConnected();
-    // 앱 열 때 자동 동기화 - 클라우드와 로컬 타임스탬프 비교
-    autoSyncCloud();
-  }else{
-    showCloudNotSetup();
-  }
+  showCloudConnected();
   updateCloudCounts();
-}
-
-async function autoSyncCloud(){
-  // 로컬 마지막 수정 시간
-  const localTs=parseInt(localStorage.getItem('mj_local_ts')||'0');
-  // 클라우드에서 타임스탬프만 확인
-  try{
-    const res=await fetch('https://api.jsonbin.io/v3/b/'+cloudBin+'/latest',{
-      headers:{'X-Master-Key':cloudKey}
-    });
-    if(!res.ok)return;
-    const json=await res.json();
-    const data=json.record;
-    if(!data)return;
-    const cloudTs=data.savedAt||0;
-    if(cloudTs>localTs){
-      // 클라우드가 더 최신 → 클라우드에서 불러오기
-      if(data.todos){allTodos=data.todos;SS(K.todos,allTodos);}
-      if(data.exps){exps=data.exps;SS(K.exps,exps);}
-      if(data.schedules){schedules=data.schedules;SS(K.scheds,schedules);}
-      if(typeof data.streak==='number'){streak=data.streak;SS(K.streak,streak);}
-      if(data.routineToday){rState=data.routineToday;SS(K.routine(todayStr()),rState);}
-      if(data.routineList){RM=data.routineList;SS('mj_v2_routine_list',RM);}
-      if(data.fixedExps){fixedExps=data.fixedExps;saveFixed();}
-      localStorage.setItem('mj_local_ts', String(cloudTs));
-      renderTodos();renderExps();renderRoutine();updateCloudCounts();
-      const el=document.getElementById('cloud-last-sync');
-      if(el)el.textContent='자동 동기화 완료';
-    }else{
-      // 로컬이 더 최신 또는 같음 → 클라우드에 저장
-      await cloudSync(false);
-    }
-  }catch(e){
-    console.log('Auto sync failed:', e.message);
-  }
+  // 앱 열 때 자동으로 불러오기
+  firebaseLoad(true);
 }
 
 function showCloudConnected(){
-  document.getElementById('cloud-not-setup').style.display='none';
-  document.getElementById('cloud-connected').style.display='block';
-  document.getElementById('cloud-status-bar').style.display='flex';
+  const notSetup=document.getElementById('cloud-not-setup');
+  const connected=document.getElementById('cloud-connected');
+  const statusBar=document.getElementById('cloud-status-bar');
+  if(notSetup)notSetup.style.display='none';
+  if(connected)connected.style.display='block';
+  if(statusBar)statusBar.style.display='flex';
 }
 function showCloudNotSetup(){
-  document.getElementById('cloud-not-setup').style.display='block';
-  document.getElementById('cloud-connected').style.display='none';
-  document.getElementById('cloud-status-bar').style.display='none';
+  const notSetup=document.getElementById('cloud-not-setup');
+  const connected=document.getElementById('cloud-connected');
+  const statusBar=document.getElementById('cloud-status-bar');
+  if(notSetup)notSetup.style.display='block';
+  if(connected)connected.style.display='none';
+  if(statusBar)statusBar.style.display='none';
 }
 
-async function connectCloud(){
-  const key=document.getElementById('cloud-key-input').value.trim();
-  if(!key){alert('Secret Key를 입력해주세요!');return;}
-  const btn=document.querySelector('#cloud-setup-card .tm-save-btn');
-  btn.textContent='연결 중...';btn.disabled=true;
+async function firebaseSave(manual=false){
   try{
-    // Create new bin
-    const payload=JSON.stringify({version:2,todos:allTodos,exps:exps,schedules:schedules,streak:streak});
-    const res=await fetch('https://api.jsonbin.io/v3/b',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'X-Master-Key':key,
-        'X-Bin-Name':'minjang-app-data',
-        'X-Bin-Private':'true'
-      },
-      body:payload
+    const data={
+      fields:{
+        savedAt:{integerValue:String(Date.now())},
+        todos:{stringValue:JSON.stringify(allTodos)},
+        exps:{stringValue:JSON.stringify(exps)},
+        schedules:{stringValue:JSON.stringify(schedules)},
+        streak:{integerValue:String(streak)},
+        routineToday:{stringValue:JSON.stringify(rState)},
+        routineList:{stringValue:JSON.stringify(RM)},
+        fixedExps:{stringValue:JSON.stringify(fixedExps)}
+      }
+    };
+    const res=await fetch(FB_API+'?key='+FB_API_KEY,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(data)
     });
-    const text=await res.text();
-    let data;
-    try{data=JSON.parse(text);}catch(e){throw new Error('응답 파싱 실패: '+text.slice(0,100));}
-    if(!res.ok){throw new Error(data.message||'HTTP '+res.status);}
-    const binId=data.metadata&&data.metadata.id;
-    if(!binId)throw new Error('Bin ID를 받지 못했어요: '+text.slice(0,100));
-    cloudKey=key;
-    cloudBin=binId;
-    localStorage.setItem(CLOUD_KEY_STORE,cloudKey);
-    localStorage.setItem(CLOUD_BIN_STORE,cloudBin);
-    showCloudConnected();
-    updateCloudCounts();
-    alert('✅ 클라우드 연결 완료!\n이제 데이터가 자동으로 저장돼요.');
-  }catch(e){
-    alert('❌ 연결 실패!\n\n'+e.message+'\n\nSecret Key를 다시 확인해주세요.');
-  }
-  btn.textContent='☁️ 연결하기';btn.disabled=false;
-}
-
-async function cloudSync(manual=false){
-  if(!cloudKey||!cloudBin)return;
-  try{
-    const res=await fetch('https://api.jsonbin.io/v3/b/'+cloudBin,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json','X-Master-Key':cloudKey},
-      body:JSON.stringify(getAllBackupData())
-    });
-    if(!res.ok)throw new Error('저장 실패');
-    const now=new Date();
-    const timeStr=(now.getHours())+':'+String(now.getMinutes()).padStart(2,'0');
+    if(!res.ok){const t=await res.text();throw new Error(t);}
+    localStorage.setItem('mj_local_ts',String(Date.now()));
     const el=document.getElementById('cloud-last-sync');
-    if(el)el.textContent='마지막 저장 '+timeStr;
-    if(manual)alert('✅ 클라우드에 저장됐어요!');
+    const now=new Date();
+    if(el)el.textContent='저장 '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+    if(manual)alert('✅ 저장됐어요!');
   }catch(e){
     if(manual)alert('❌ 저장 실패: '+e.message);
+    console.log('Firebase save error:',e.message);
   }
 }
 
-async function cloudLoad(silent=false){
-  if(!cloudKey||!cloudBin)return;
-  const btn=document.querySelector('#cloud-connected .bk-import');
-  if(btn&&!silent){btn.textContent='불러오는 중...';btn.disabled=true;}
+async function firebaseLoad(silent=false){
   try{
-    const res=await fetch('https://api.jsonbin.io/v3/b/'+cloudBin+'/latest',{
-      headers:{'X-Master-Key':cloudKey}
-    });
-    if(!res.ok)throw new Error('불러오기 실패');
+    const res=await fetch(FB_API+'?key='+FB_API_KEY);
+    if(!res.ok){if(!silent)alert('불러오기 실패');return;}
     const json=await res.json();
-    const data=json.record;
-    if(!data||!data.todos)throw new Error('데이터 없음');
-    if(data.todos){allTodos=data.todos;SS(K.todos,allTodos);}
-    if(data.exps){exps=data.exps;SS(K.exps,exps);}
-    if(data.schedules){schedules=data.schedules;SS(K.scheds,schedules);}
-    if(typeof data.streak==='number'){streak=data.streak;SS(K.streak,streak);}
-    if(data.routineToday){rState=data.routineToday;SS(K.routine(todayStr()),rState);}
-    if(data.routineList){RM=data.routineList;SS('mj_v2_routine_list',RM);}
-    if(data.fixedExps){fixedExps=data.fixedExps;saveFixed();}
+    const f=json.fields;
+    if(!f){if(!silent)alert('데이터 없음');return;}
+    const cloudTs=parseInt(f.savedAt?.integerValue||'0');
+    const localTs=parseInt(localStorage.getItem('mj_local_ts')||'0');
+    if(cloudTs<=localTs&&silent){
+      // 로컬이 최신 → 클라우드에 저장
+      await firebaseSave(false);
+      return;
+    }
+    if(f.todos?.stringValue){allTodos=JSON.parse(f.todos.stringValue);SS(K.todos,allTodos);}
+    if(f.exps?.stringValue){exps=JSON.parse(f.exps.stringValue);SS(K.exps,exps);}
+    if(f.schedules?.stringValue){schedules=JSON.parse(f.schedules.stringValue);SS(K.scheds,schedules);}
+    if(f.streak?.integerValue){streak=parseInt(f.streak.integerValue);SS(K.streak,streak);}
+    if(f.routineToday?.stringValue){rState=JSON.parse(f.routineToday.stringValue);SS(K.routine(todayStr()),rState);}
+    if(f.routineList?.stringValue){RM=JSON.parse(f.routineList.stringValue);SS('mj_v2_routine_list',RM);}
+    if(f.fixedExps?.stringValue){fixedExps=JSON.parse(f.fixedExps.stringValue);saveFixed();}
+    localStorage.setItem('mj_local_ts',String(cloudTs));
     renderTodos();renderExps();renderRoutine();updateCloudCounts();
     const el=document.getElementById('cloud-last-sync');
     const now=new Date();
-    const timeStr=(now.getHours())+':'+String(now.getMinutes()).padStart(2,'0');
-    if(el)el.textContent='자동 불러옴 '+timeStr;
-    if(!silent)alert('✅ 클라우드에서 불러왔어요!');
+    if(el)el.textContent='동기화 '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+    if(!silent)alert('✅ 불러왔어요!');
   }catch(e){
     if(!silent)alert('❌ 불러오기 실패: '+e.message);
+    console.log('Firebase load error:',e.message);
   }
-  if(btn&&!silent){btn.textContent='📥 클라우드에서 불러오기';btn.disabled=false;}
 }
 
-function disconnectCloud(){
-  if(!confirm('클라우드 연결을 해제할까요?\n데이터는 기기에 유지됩니다.'))return;
-  cloudKey='';cloudBin='';
-  localStorage.removeItem(CLOUD_KEY_STORE);
-  localStorage.removeItem(CLOUD_BIN_STORE);
-  showCloudNotSetup();
+async function autoSyncCloud(){
+  await firebaseLoad(true);
 }
 
-// Auto-sync debounced - called after every data change
+function connectCloud(){alert('Firebase로 자동 연결됐어요! 설정이 필요 없어요 😊');}
+function cloudSync(manual=false){return firebaseSave(manual);}
+function cloudLoad(silent=false){return firebaseLoad(silent);}
+function disconnectCloud(){alert('이 앱은 Firebase에 연결되어 있어요.');}
+
 function scheduleSync(){
-  if(!cloudKey||!cloudBin)return;
   clearTimeout(syncTimer);
-  syncTimer=setTimeout(()=>cloudSync(false),3000); // 3초 후 자동 저장
+  syncTimer=setTimeout(()=>firebaseSave(false), 3000);
 }
 
 function updateCloudCounts(){
@@ -1951,7 +1888,7 @@ renderTodos();
 renderExps();
 initCloud();
 // 30초마다 자동 동기화
-setInterval(()=>{if(cloudKey&&cloudBin)autoSyncCloud();}, 30000);
+setInterval(()=>autoSyncCloud(), 30000);
 </script>
 </body>
 </html>
