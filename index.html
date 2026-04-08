@@ -449,12 +449,18 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
           <div class="row">
             <input type="text" id="e-desc" placeholder="내용 (예: 점심식사)">
           </div>
-          <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+          <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap" id="cat-chip-row">
             <button class="cat-chip sel" id="ec-식비" onclick="selectExpCat('식비',this)">🍚 식비</button>
             <button class="cat-chip" id="ec-교통" onclick="selectExpCat('교통',this)">🚌 교통</button>
             <button class="cat-chip" id="ec-쇼핑" onclick="selectExpCat('쇼핑',this)">🛍️ 쇼핑</button>
             <button class="cat-chip" id="ec-카페" onclick="selectExpCat('카페',this)">☕ 카페</button>
             <button class="cat-chip" id="ec-기타" onclick="selectExpCat('기타',this)">📦 기타</button>
+            <button class="cat-chip" onclick="showAddCatInput()" id="ec-add-btn">➕ 추가</button>
+          </div>
+          <div id="add-cat-row" style="display:none;gap:6px;margin-bottom:8px;align-items:center">
+            <input type="text" id="new-cat-input" placeholder="카테고리 이름" style="flex:1;height:34px;border:1px solid #ddd;border-radius:10px;padding:0 10px;font-size:13px;font-family:inherit;outline:none">
+            <button onclick="addCustomCat()" style="height:34px;padding:0 12px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700">추가</button>
+            <button onclick="document.getElementById('add-cat-row').style.display='none'" style="height:34px;padding:0 10px;background:#f0f0eb;color:#888;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">취소</button>
           </div>
           <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
             <button class="store-chip sel" id="es-비쿱" onclick="selectExpStore('비쿱',this)" style="--sc:#1a9e60">✂️ 비쿱</button>
@@ -938,6 +944,31 @@ let emChart=null,eyChart=null;
 let selectedExpCat='식비';
 let selectedExpStore='비쿱';
 let selectedFixedStore='비쿱';
+
+function showAddCatInput(){
+  document.getElementById('add-cat-row').style.display='flex';
+  document.getElementById('new-cat-input').focus();
+}
+
+function addCustomCat(){
+  const inp=document.getElementById('new-cat-input');
+  const name=inp.value.trim();
+  if(!name)return;
+  // Add button to chip row
+  const row=document.getElementById('cat-chip-row');
+  const addBtn=document.getElementById('ec-add-btn');
+  const btn=document.createElement('button');
+  btn.className='cat-chip';
+  btn.id='ec-'+name;
+  btn.textContent='🏷️ '+name;
+  btn.onclick=function(){selectExpCat(name,this);};
+  row.insertBefore(btn, addBtn);
+  // Select it
+  selectExpCat(name, btn);
+  // Hide input
+  inp.value='';
+  document.getElementById('add-cat-row').style.display='none';
+}
 
 function selectExpCat(cat,btn){
   selectedExpCat=cat;
