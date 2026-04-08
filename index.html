@@ -1448,8 +1448,22 @@ function renderExps(){
       <span style="font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;background:rgba(255,255,255,.07);color:${storeColor[e.store]||'#8a8d96'}">${e.store||'개인'}</span>
       <span class="eamt">₩${e.amt.toLocaleString()}</span>
       <span class="edate-lbl">${e.date?e.date.slice(5).replace('-','/'):'오늘'}</span>
+      <button class="dbtn" onclick="editExp(${e.id})" style="color:#1a9e60">✏️</button>
       <button class="dbtn" onclick="delE(${e.id})">✕</button>
     </div>`).join('');
+}
+
+function editExp(id){
+  const e=exps.find(x=>x.id===id);
+  if(!e)return;
+  const desc=prompt('내용 수정:',e.desc);
+  if(desc===null)return;
+  const amtStr=prompt('금액 수정:',e.amt);
+  if(amtStr===null)return;
+  const amt=parseInt(amtStr);
+  if(!amt||isNaN(amt)){alert('금액을 올바르게 입력해주세요!');return;}
+  exps=exps.map(x=>x.id===id?{...x,desc:desc.trim()||x.desc,amt}:x);
+  saveExps();renderExps();
 }
 
 function addExp(){
