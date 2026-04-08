@@ -1082,11 +1082,10 @@ function renderTodos(){
     const allDone=items.every(t=>t.done);
     const isToday=date===nowStr;
     const isPast=date!=='날짜없음'&&date<nowStr;
-    html+=`<div style="margin-bottom:4px">
-      <div style="font-size:12px;font-weight:800;color:${isToday?'#1a9e60':isPast?'#aaa':'#555'};padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid ${isToday?'#1a9e60':'#eee'};margin-bottom:6px">
-        <span>${dateLabel(date)}</span>
-        <span style="font-size:11px;font-weight:600;color:${isToday?'#1a9e60':'#aaa'}">${items.filter(t=>t.done).length}/${items.length} 완료</span>
-      </div>`;
+    const hColor=isToday?'#1a9e60':isPast?'#aaa':'#555';
+    const hBorder=isToday?'#1a9e60':'#eee';
+    const cntColor=isToday?'#1a9e60':'#aaa';
+    html+='<div style="margin-bottom:4px"><div style="font-size:12px;font-weight:800;color:'+hColor+';padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid '+hBorder+';margin-bottom:6px"><span>'+dateLabel(date)+'</span><span style="font-size:11px;font-weight:600;color:'+cntColor+'">'+items.filter(t=>t.done).length+'/'+items.length+' 완료</span></div>';
     html+=items.map(t=>{
     const sd=t.subs.filter(s=>s.done).length,st=t.subs.length,isOpen=openTodoId===t.id;
     // Date/time display
@@ -1144,7 +1143,7 @@ function renderTodos(){
     </div>`;
   }).join('');
   list.forEach(t=>{const inp=document.getElementById('si-'+t.id);if(inp)inp.addEventListener('keypress',e=>{if(e.key==='Enter')addSub(t.id);});});
-  renderTodoCh();renderCalTodos();updateBadge('todo');
+  renderCalTodos();updateBadge('todo');
 }
 
 function toggleDetail(id){openTodoId=openTodoId===id?null:id;renderTodos();}
