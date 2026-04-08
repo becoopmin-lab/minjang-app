@@ -1038,10 +1038,56 @@ function renderTodos(){
   const el=document.getElementById('t-list');
   let list=activeTodos();
   if(todoFilter!=='all')list=list.filter(t=>t.category===todoFilter);
-  if(!list.length){el.innerHTML='<p class="empty">할 일을 추가해보세요!</p>';renderTodoCh();renderCalTodos();updateBadge('todo');return;}
+  // 시간순 정렬 (날짜+시간 기준)
+  list.sort((a,b)=>{
+    const da=(a.dueDate||'9999-99-99')+(a.dueTime||'99:99');
+    const db=(b.dueDate||'9999-99-99')+(b.dueTime||'99:99');
+    return da.localeCompare(db);
+  });
+  if(!list.length){el.innerHTML='<p class="empty">할 일을 추가해보세요!</p>';renderCalTodos();updateBadge('todo');return;}
 
   const nowStr=todayStr();
-  el.innerHTML=list.map(t=>{
+  // 날짜별 그룹핑
+  const groups={};
+  list.forEach(t=>{
+    const d=t.dueDate||'날짜없음';
+    if(!groups[d])groups[d]=[];
+    groups[d].push(t);
+  });
+  const sortedDates=Object.keys(groups).sort((a,b)=>{
+    if(a==='날짜없음')return 1;
+    if(b==='날짜없음')return -1;
+    return a.localeCompare(b);
+  });
+  
+  const dateLabel=(d)=>{
+    if(d==='날짜없음')return '📋 날짜 미정';
+    const dt=new Date(d+'T00:00:00');
+    const month=dt.getMonth()+1;
+    const day=dt.getDate();
+    const dow=['일','월','화','수','목','금','토'][dt.getDay()];
+    const today=new Date(nowStr+'T00:00:00');
+    const diff=Math.round((dt-today)/(1000*60*60*24));
+    let suffix='';
+    if(diff===0)suffix=' · 오늘';
+    else if(diff===1)suffix=' · 내일';
+    else if(diff===-1)suffix=' · 어제';
+    else if(diff<0)suffix=' · '+Math.abs(diff)+'일 전';
+    return month+'월 '+day+'일 ('+dow+')'+suffix;
+  };
+
+  let html='';
+  sortedDates.forEach(date=>{
+    const items=groups[date];
+    const allDone=items.every(t=>t.done);
+    const isToday=date===nowStr;
+    const isPast=date!=='날짜없음'&&date<nowStr;
+    html+=`<div style="margin-bottom:4px">
+      <div style="font-size:12px;font-weight:800;color:${isToday?'#1a9e60':isPast?'#aaa':'#555'};padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid ${isToday?'#1a9e60':'#eee'};margin-bottom:6px">
+        <span>${dateLabel(date)}</span>
+        <span style="font-size:11px;font-weight:600;color:${isToday?'#1a9e60':'#aaa'}">${items.filter(t=>t.done).length}/${items.length} 완료</span>
+      </div>`;
+    html+=items.map(t=>{
     const sd=t.subs.filter(s=>s.done).length,st=t.subs.length,isOpen=openTodoId===t.id;
     // Date/time display
     let dateBadge='',timeBadge='';
@@ -1063,7 +1109,7 @@ function renderTodos(){
           ${!isOpen&&t.note?`<div class="t-note-preview">📝 ${t.note}</div>`:''}
           ${!isOpen&&st?`<div class="t-note-preview">☑ 세부 ${sd}/${st}</div>`:''}
         </div>
-        <button class="expand-btn" onclick="toggleDetail(${t.id})">${isOpen?'▲':'▼'}</button>
+        <button class="expand-btn" onclick="toggleDetail(${t.id})">✏️</button>
         <button class="dbtn" onclick="archiveTodo(${t.id})" title="숨기기">🗑️</button>
       </div>
       ${isOpen?`<div class="t-detail open">
