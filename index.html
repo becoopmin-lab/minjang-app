@@ -1067,6 +1067,8 @@ function renderTodos(){
         <button class="dbtn" onclick="archiveTodo(${t.id})" title="숨기기">🗑️</button>
       </div>
       ${isOpen?`<div class="t-detail open">
+        <div class="detail-sec">제목</div>
+        <input type="text" value="${t.text.replace(/"/g,'&quot;')}" onchange="updateTodoTitle(${t.id},this.value)" style="width:100%;height:40px;border:1px solid #ddd;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:#111;outline:none;margin-bottom:10px;font-weight:600">
         <div class="detail-sec">분류</div>
         <div class="priority-row">
           <button class="p-chip ${t.category==='urgent'?'sel-high':''}" onclick="setPriority(${t.id},'urgent')">🚨 긴급</button>
@@ -1166,6 +1168,11 @@ function closeTodoModal(){document.getElementById('todo-modal-bg').classList.add
 function closeTodoModalBg(e){if(e.target===document.getElementById('todo-modal-bg'))closeTodoModal();}
 
 // Update due date/time from detail panel inline inputs
+function updateTodoTitle(id,val){
+  if(!val.trim())return;
+  allTodos=allTodos.map(t=>t.id===id?{...t,text:val.trim()}:t);
+  saveTodos();
+}
 function updateDueDate(id,val){allTodos=allTodos.map(t=>t.id===id?{...t,dueDate:val||null}:t);saveTodos();}
 function updateDueTime(id,val){allTodos=allTodos.map(t=>t.id===id?{...t,dueTime:val||null}:t);saveTodos();}
 
