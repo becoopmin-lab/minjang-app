@@ -743,6 +743,41 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
   </div>
 </div>
 
+<!-- 지출 수정 모달 -->
+<div class="todo-modal-bg hidden" id="exp-edit-modal-bg" onclick="closeExpEditModalBg(event)">
+  <div class="todo-modal">
+    <div class="todo-modal-title">
+      <span>지출 수정</span>
+      <button class="todo-modal-close" onclick="closeExpEditModal()">✕</button>
+    </div>
+    <div class="tm-label">내용</div>
+    <div class="tm-row" style="margin-bottom:10px">
+      <input type="text" id="ee-desc" placeholder="지출 내용">
+    </div>
+    <div class="tm-label">카테고리</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap" id="ee-cat-row">
+      <button class="cat-chip" id="ee-식비" onclick="setEECat('식비',this)">🍚 식비</button>
+      <button class="cat-chip" id="ee-교통" onclick="setEECat('교통',this)">🚌 교통</button>
+      <button class="cat-chip" id="ee-쇼핑" onclick="setEECat('쇼핑',this)">🛍️ 쇼핑</button>
+      <button class="cat-chip" id="ee-카페" onclick="setEECat('카페',this)">☕ 카페</button>
+      <button class="cat-chip" id="ee-기타" onclick="setEECat('기타',this)">📦 기타</button>
+    </div>
+    <div class="tm-label">매장</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="store-chip" id="ee-비쿱" onclick="setEEStore('비쿱',this)">✂️ 비쿱</button>
+      <button class="store-chip" id="ee-제니스" onclick="setEEStore('제니스',this)">💈 제니스</button>
+      <button class="store-chip" id="ee-중산" onclick="setEEStore('중산',this)">🪮 중산</button>
+      <button class="store-chip" id="ee-마샬" onclick="setEEStore('마샬',this)">💇 마샬</button>
+      <button class="store-chip" id="ee-개인" onclick="setEEStore('개인',this)">👤 개인</button>
+    </div>
+    <div class="tm-label">금액</div>
+    <div class="tm-row" style="margin-bottom:16px">
+      <input type="number" id="ee-amt" placeholder="금액 (원)">
+    </div>
+    <button class="tm-save-btn" onclick="saveExpEdit()">💾 저장하기</button>
+  </div>
+</div>
+
 <script>
 /* ══ STORAGE ══ */
 const K={todos:'mj_v2_todos',exps:'mj_v2_exps',scheds:'mj_v2_scheds',streak:'mj_v2_streak',routine:d=>'mj_v2_r_'+d};
@@ -1453,17 +1488,57 @@ function renderExps(){
     </div>`).join('');
 }
 
+let editingExpId=null;
+let editingExpCat='기타';
+let editingExpStore='개인';
+
 function editExp(id){
   const e=exps.find(x=>x.id===id);
   if(!e)return;
-  const desc=prompt('내용 수정:',e.desc);
-  if(desc===null)return;
-  const amtStr=prompt('금액 수정:',e.amt);
-  if(amtStr===null)return;
-  const amt=parseInt(amtStr);
-  if(!amt||isNaN(amt)){alert('금액을 올바르게 입력해주세요!');return;}
-  exps=exps.map(x=>x.id===id?{...x,desc:desc.trim()||x.desc,amt}:x);
+  editingExpId=id;
+  editingExpCat=e.cat||'기타';
+  editingExpStore=e.store||'개인';
+  document.getElementById('ee-desc').value=e.desc||'';
+  document.getElementById('ee-amt').value=e.amt||'';
+  // Set cat
+  document.querySelectorAll('#ee-cat-row .cat-chip').forEach(b=>b.classList.remove('sel'));
+  const catBtn=document.getElementById('ee-'+editingExpCat);
+  if(catBtn)catBtn.classList.add('sel');
+  // Set store
+  document.querySelectorAll('#exp-edit-modal-bg .store-chip').forEach(b=>b.classList.remove('sel'));
+  const storeBtn=document.getElementById('ee-'+editingExpStore);
+  if(storeBtn)storeBtn.classList.add('sel');
+  document.getElementById('exp-edit-modal-bg').classList.remove('hidden');
+}
+
+function setEECat(cat,btn){
+  editingExpCat=cat;
+  document.querySelectorAll('#ee-cat-row .cat-chip').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function setEEStore(store,btn){
+  editingExpStore=store;
+  document.querySelectorAll('#exp-edit-modal-bg .store-chip').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function saveExpEdit(){
+  const desc=document.getElementById('ee-desc').value.trim();
+  const amt=parseInt(document.getElementById('ee-amt').value);
+  if(!desc||!amt||isNaN(amt)){alert('내용과 금액을 입력해주세요!');return;}
+  exps=exps.map(x=>x.id===editingExpId?{...x,desc,amt,cat:editingExpCat,store:editingExpStore}:x);
   saveExps();renderExps();
+  closeExpEditModal();
+}
+
+function closeExpEditModal(){
+  document.getElementById('exp-edit-modal-bg').classList.add('hidden');
+  editingExpId=null;
+}
+
+function closeExpEditModalBg(e){
+  if(e.target===document.getElementById('exp-edit-modal-bg'))closeExpEditModal();
 }
 
 function addExp(){
