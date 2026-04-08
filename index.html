@@ -1034,6 +1034,7 @@ function setFilter(f,btn){
   renderTodos();
 }
 
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function renderTodos(){
   const el=document.getElementById('t-list');
   let list=activeTodos();
@@ -1103,7 +1104,7 @@ function renderTodos(){
       <div class="ti">
         <div class="ck ${t.done?'y':''}" onclick="togT(${t.id})"></div>
         <div class="t-main" onclick="toggleDetail(${t.id})">
-          <div class="ttext ${t.done?'done':''}">${t.text}${t.category?`<span class="p-badge p-${t.category==='urgent'?'high':t.category==='store'?'mid':'low'}">${pLabel[t.category]||''}</span>`:''}${t.note||st?'<span class="note-dot"></span>':''}</div>
+          <div class="ttext ${t.done?'done':''}">${t.text}${t.category?('<span class="p-badge p-'+(t.category==='urgent'?'high':t.category==='store'?'mid':'low')+'">'+( pLabel[t.category]||'')+'</span>'):''}${t.note||st?'<span class="note-dot"></span>':''}</div>
           ${metaRow}
           ${!isOpen&&t.note?`<div class="t-note-preview">📝 ${t.note}</div>`:''}
           ${!isOpen&&st?`<div class="t-note-preview">☑ 세부 ${sd}/${st}</div>`:''}
@@ -1113,7 +1114,7 @@ function renderTodos(){
       </div>
       ${isOpen?`<div class="t-detail open">
         <div class="detail-sec">제목</div>
-        <input type="text" value="${t.text.replace(/"/g,'&quot;')}" onchange="updateTodoTitle(${t.id},this.value)" style="width:100%;height:40px;border:1px solid #ddd;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:#111;outline:none;margin-bottom:10px;font-weight:600">
+        <input type="text" value="${escHtml(t.text)}" onchange="updateTodoTitle(${t.id},this.value)" style="width:100%;height:40px;border:1px solid #ddd;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:#111;outline:none;margin-bottom:10px;font-weight:600">
         <div class="detail-sec">분류</div>
         <div class="priority-row">
           <button class="p-chip ${t.category==='urgent'?'sel-high':''}" onclick="setPriority(${t.id},'urgent')">🚨 긴급</button>
@@ -1136,12 +1137,15 @@ function renderTodos(){
         </div>
         <div id="del-confirm-${t.id}" style="display:none" class="del-confirm">
           <span>정말 삭제할까요? 기록에서도 사라져요</span>
-          <button class="del-no" onclick="document.getElementById('del-confirm-${t.id}').style.display='none'">취소</button>
+          <button class="del-no" onclick="document.getElementById(&apos;del-confirm-${t.id}&apos;).style.display=&apos;none&apos;">취소</button>
           <button class="del-yes" onclick="deleteTodoPermanent(${t.id})">삭제</button>
         </div>
       </div>`:''}
     </div>`;
-  }).join('');
+    }).join('');
+    html+='</div>';
+  });
+  el.innerHTML=html;
   list.forEach(t=>{const inp=document.getElementById('si-'+t.id);if(inp)inp.addEventListener('keypress',e=>{if(e.key==='Enter')addSub(t.id);});});
   renderCalTodos();updateBadge('todo');
 }
