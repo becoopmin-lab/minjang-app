@@ -1692,14 +1692,13 @@ async function firebaseLoad(silent=false){
     if(!res.ok){if(!silent)alert('불러오기 실패');return;}
     const json=await res.json();
     const f=json.fields;
-    if(!f){if(!silent)alert('데이터 없음');return;}
-    const cloudTs=parseInt(f.savedAt?.integerValue||'0');
-    const localTs=parseInt(localStorage.getItem('mj_local_ts')||'0');
-    if(cloudTs<=localTs&&silent){
-      // 로컬이 최신 → 클라우드에 저장
+    if(!f){
+      // 데이터 없으면 현재 데이터 저장
       await firebaseSave(false);
       return;
     }
+    const cloudTs=parseInt(f.savedAt?.integerValue||'0');
+    // 클라우드에 데이터가 있으면 항상 불러오기
     if(f.todos?.stringValue){allTodos=JSON.parse(f.todos.stringValue);SS(K.todos,allTodos);}
     if(f.exps?.stringValue){exps=JSON.parse(f.exps.stringValue);SS(K.exps,exps);}
     if(f.schedules?.stringValue){schedules=JSON.parse(f.schedules.stringValue);SS(K.scheds,schedules);}
