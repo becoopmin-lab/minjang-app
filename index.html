@@ -27,7 +27,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 .r-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07);transition:opacity .2s}
 .r-item:last-child{border:none;padding-bottom:0}
 .r-item.done-item{opacity:.35}
-.r-ck{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s;background:transparent}
+.r-ck{width:22px;height:22px;border-radius:50%;border:2px solid #999;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s;background:transparent}
 .r-ck.y{background:#1a9e60;border-color:#1a9e60}
 .r-ck.y::after{content:'✓';color:#000;font-size:12px;font-weight:800}
 .r-left{display:flex;align-items:center;gap:10px;flex:1}
@@ -72,7 +72,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 .ti-wrap:last-child{border:none}
 .ti{display:flex;align-items:center;gap:10px;padding:10px 0}
 .ck{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-.ck.y{background:#1a9e60;border-color:#1a9e60}
+.ck.y{background:#1a9e60;border-color:#1a9e60;box-shadow:0 0 0 2px rgba(26,158,96,.2)}
 .ck.y::after{content:'✓';color:#000;font-size:11px;font-weight:800}
 .t-main{flex:1;min-width:0;cursor:pointer}
 .ttext{font-size:14px;color:#111111;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-weight:500}
@@ -221,7 +221,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 .rec-badge{font-size:10px;padding:2px 6px;border-radius:10px;background:rgba(91,156,246,.15);color:#5b9cf6;font-weight:600;margin-left:6px}
 .cal-todo-item{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07)}
 .cal-todo-item:last-child{border:none;padding-bottom:0}
-.ck-sm{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.ck-sm{width:18px;height:18px;border-radius:50%;border:2px solid #999;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .ck-sm.y{background:#1a9e60;border-color:#1a9e60}
 .ck-sm.y::after{content:'✓';color:#000;font-size:10px;font-weight:800}
 .cal-tt{flex:1;font-size:13px;color:#111111}
@@ -305,7 +305,12 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 <div class="phone">
   <div class="hdr">
     <div><h1 id="hdr-title">모닝 루틴</h1><div class="sub" id="hdr-date"></div></div>
-    <div id="hdr-badge"></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="manualSync()" id="sync-btn" style="background:rgba(26,158,96,.12);border:1px solid rgba(26,158,96,.3);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:#1a9e60;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px">
+        ☁️ <span id="sync-btn-text">동기화</span>
+      </button>
+      <div id="hdr-badge"></div>
+    </div>
   </div>
   <div class="content">
 
@@ -358,7 +363,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
           </div>
           <div id="t-list"></div>
         </div>
-        <div class="card"><div class="sec">오늘 진행 현황</div><canvas id="todo-ch" height="130"></canvas></div>
+
       </div>
 
       <!-- 월간 기록 뷰 -->
@@ -1726,6 +1731,18 @@ function connectCloud(){alert('Firebase로 자동 연결됐어요! 설정이 필
 function cloudSync(manual=false){return firebaseSave(manual);}
 function cloudLoad(silent=false){return firebaseLoad(silent);}
 function disconnectCloud(){alert('이 앱은 Firebase에 연결되어 있어요.');}
+
+async function manualSync(){
+  const btn=document.getElementById('sync-btn');
+  const txt=document.getElementById('sync-btn-text');
+  if(btn)btn.style.opacity='0.6';
+  if(txt)txt.textContent='저장 중...';
+  await firebaseSave(false);
+  await firebaseLoad(true);
+  if(txt)txt.textContent='완료!';
+  if(btn)btn.style.opacity='1';
+  setTimeout(()=>{if(txt)txt.textContent='동기화';},2000);
+}
 
 function scheduleSync(){
   clearTimeout(syncTimer);
