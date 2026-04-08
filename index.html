@@ -71,7 +71,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 .ti-wrap{border-bottom:1px solid rgba(255,255,255,.07)}
 .ti-wrap:last-child{border:none}
 .ti{display:flex;align-items:center;gap:10px;padding:10px 0}
-.ck{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.ck{width:22px;height:22px;border-radius:50%;border:2px solid #aaa;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;background:#fff}
 .ck.y{background:#1a9e60;border-color:#1a9e60;box-shadow:0 0 0 2px rgba(26,158,96,.2)}
 .ck.y::after{content:'✓';color:#000;font-size:11px;font-weight:800}
 .t-main{flex:1;min-width:0;cursor:pointer}
@@ -1064,7 +1064,7 @@ function renderTodos(){
           ${!isOpen&&st?`<div class="t-note-preview">☑ 세부 ${sd}/${st}</div>`:''}
         </div>
         <button class="expand-btn" onclick="toggleDetail(${t.id})">${isOpen?'▲':'▼'}</button>
-        <button class="dbtn" onclick="archiveTodo(${t.id})" title="숨기기">☁</button>
+        <button class="dbtn" onclick="archiveTodo(${t.id})" title="숨기기">🗑️</button>
       </div>
       ${isOpen?`<div class="t-detail open">
         <div class="detail-sec">분류</div>
