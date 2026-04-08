@@ -603,45 +603,25 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
       <div class="card"><div class="sec">카테고리별 지출</div><canvas id="cat-ch" height="180"></canvas></div>
       <div class="card"><div class="sec">할 일 완료율</div><canvas id="prog-ch" height="160"></canvas></div>
 
-      <!-- CLOUD SYNC SECTION -->
-      <div class="card" id="cloud-setup-card">
-        <div class="sec">☁️ 클라우드 자동 저장</div>
-        <div id="cloud-status-bar" style="display:none;align-items:center;gap:9px;padding:12px 14px;border-radius:12px;margin-bottom:14px;border:1px solid rgba(30,217,128,.2);background:rgba(26,158,96,.08)">
+      <!-- CLOUD SYNC STATUS -->
+      <div class="card">
+        <div class="sec">☁️ Firebase 자동 저장</div>
+        <div style="display:flex;align-items:center;gap:9px;padding:12px 14px;border-radius:12px;background:rgba(26,158,96,.08);border:1px solid rgba(26,158,96,.2);margin-bottom:14px">
           <div style="width:8px;height:8px;border-radius:50%;background:#1a9e60;flex-shrink:0;animation:pulse 2s infinite"></div>
-          <div style="flex:1;font-size:12px;color:#666666">클라우드 자동 저장 중</div>
-          <div style="font-size:11px;color:#999999" id="cloud-last-sync">—</div>
+          <div style="flex:1;font-size:13px;color:#333;font-weight:600">실시간 자동 저장 중</div>
+          <div style="font-size:11px;color:#888" id="cloud-last-sync">—</div>
         </div>
-        <div id="cloud-not-setup" style="padding:12px 0;display:none">
-          <div style="font-size:13px;color:#111111;font-weight:700;margin-bottom:6px">설정 방법 (1분)</div>
-          <div style="font-size:12px;color:#666666;line-height:1.7;margin-bottom:14px">
-            1. <a href="https://jsonbin.io" target="_blank" style="color:#1a9e60">jsonbin.io</a> 접속 → 무료 가입<br>
-            2. 우측 상단 프로필 → <b style="color:#111111">API Keys</b><br>
-            3. <b style="color:#111111">Secret Key</b> 복사해서 아래 입력<br>
-            4. <b style="color:#1a9e60">연결하기</b> 클릭 → 자동 저장 시작!
-          </div>
-          <div class="tm-label">Secret Key</div>
-          <div class="tm-row" style="margin-bottom:10px">
-            <input type="password" id="cloud-key-input" placeholder="$2b$10$...">
-          </div>
-          <button class="tm-save-btn" onclick="connectCloud()" style="margin-top:0">☁️ 연결하기</button>
+        <div class="bk-count-row">
+          <div class="bk-count"><div class="bk-count-num" id="bk-cnt-todo">0</div><div class="bk-count-lbl">할 일</div></div>
+          <div class="bk-count"><div class="bk-count-num" id="bk-cnt-exp">0</div><div class="bk-count-lbl">지출</div></div>
+          <div class="bk-count"><div class="bk-count-num" id="bk-cnt-sched">0</div><div class="bk-count-lbl">일정</div></div>
         </div>
-        <div id="cloud-connected" style="display:none">
-          <div class="bk-count-row">
-            <div class="bk-count"><div class="bk-count-num" id="bk-cnt-todo">0</div><div class="bk-count-lbl">할 일</div></div>
-            <div class="bk-count"><div class="bk-count-num" id="bk-cnt-exp">0</div><div class="bk-count-lbl">지출</div></div>
-            <div class="bk-count"><div class="bk-count-num" id="bk-cnt-sched">0</div><div class="bk-count-lbl">일정</div></div>
-          </div>
-          <button class="bk-btn bk-export" onclick="cloudSync(true)" style="margin-bottom:10px">
-            ☁️ 지금 바로 저장하기
-          </button>
-          <button class="bk-btn bk-import" onclick="cloudLoad()" style="margin-bottom:10px">
-            📥 클라우드에서 불러오기
-          </button>
-          <button class="bk-btn" onclick="exportData()" style="background:rgba(255,255,255,.07);color:#666666;border:1px solid #e0e0dc;margin-bottom:10px">
-            📦 JSON 파일로 내보내기
-          </button>
-          <button onclick="disconnectCloud()" style="width:100%;background:none;border:none;color:#999999;font-size:12px;cursor:pointer;font-family:inherit;padding:6px 0">연결 해제</button>
-        </div>
+        <button class="bk-btn bk-export" onclick="cloudSync(true)" style="margin-bottom:10px">
+          ☁️ 지금 바로 저장하기
+        </button>
+        <button class="bk-btn bk-import" onclick="cloudLoad(false)" style="margin-bottom:10px">
+          📥 클라우드에서 불러오기
+        </button>
       </div>
 
       <!-- LOCAL BACKUP -->
