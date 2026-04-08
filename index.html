@@ -1644,17 +1644,22 @@ function saveSchedule(){
 /* ══ CLOUD SYNC (JSONBin.io) ══ */
 const CLOUD_KEY_STORE='mj_cloud_key';
 const CLOUD_BIN_STORE='mj_cloud_bin';
+// 기본 Bin ID - 모든 기기에서 자동 연결
+const DEFAULT_BIN_ID='69d5c8eeaaba882197d56798';
 let cloudKey=localStorage.getItem(CLOUD_KEY_STORE)||'';
-let cloudBin=localStorage.getItem(CLOUD_BIN_STORE)||'';
+let cloudBin=localStorage.getItem(CLOUD_BIN_STORE)||DEFAULT_BIN_ID;
 let syncTimer=null;
 
 function initCloud(){
-  if(cloudKey&&cloudBin){
+  // Bin ID 항상 최신으로 유지
+  if(!localStorage.getItem(CLOUD_BIN_STORE)){
+    localStorage.setItem(CLOUD_BIN_STORE, DEFAULT_BIN_ID);
+    cloudBin=DEFAULT_BIN_ID;
+  }
+  if(cloudKey){
     showCloudConnected();
-    cloudLoad(); // auto-load on startup
-  }else if(cloudKey){
-    // key exists but no bin yet - create one
-    showCloudConnected();
+    // 앱 열 때마다 자동으로 클라우드에서 불러오기
+    cloudLoad();
   }else{
     showCloudNotSetup();
   }
