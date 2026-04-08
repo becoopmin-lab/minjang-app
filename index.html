@@ -1947,6 +1947,8 @@ renderRoutine();
 renderTodos();
 renderExps();
 initCloud();
+// 30초마다 자동 동기화
+setInterval(()=>{if(cloudKey&&cloudBin)autoSyncCloud();}, 30000);
 </script>
 </body>
 </html>
