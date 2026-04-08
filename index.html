@@ -1644,9 +1644,12 @@ function saveSchedule(){
 /* ══ CLOUD SYNC (JSONBin.io) ══ */
 const CLOUD_KEY_STORE='mj_cloud_key';
 const CLOUD_BIN_STORE='mj_cloud_bin';
-// 기본 Bin ID - 모든 기기에서 자동 연결
 const DEFAULT_BIN_ID='69d5c8eeaaba882197d56798';
-let cloudKey=localStorage.getItem(CLOUD_KEY_STORE)||'';
+const DEFAULT_KEY='$2a$10$Rgojg02iDHtDH55Gp49CCuuhoTh5MoQOpJ3TYq.ql1x6sJA5vi0ge';
+// 자동으로 키와 Bin ID 설정
+if(!localStorage.getItem(CLOUD_KEY_STORE))localStorage.setItem(CLOUD_KEY_STORE,DEFAULT_KEY);
+if(!localStorage.getItem(CLOUD_BIN_STORE))localStorage.setItem(CLOUD_BIN_STORE,DEFAULT_BIN_ID);
+let cloudKey=localStorage.getItem(CLOUD_KEY_STORE)||DEFAULT_KEY;
 let cloudBin=localStorage.getItem(CLOUD_BIN_STORE)||DEFAULT_BIN_ID;
 let syncTimer=null;
 
