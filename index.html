@@ -299,9 +299,97 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 .nb.on{color:#1a9e60}
 .nb svg{width:20px;height:20px}
 .empty{text-align:center;color:#999999;font-size:13px;padding:20px 0}
+
+.landing-bg{position:fixed;inset:0;background:#f5f5f0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.landing-logo{font-size:48px;margin-bottom:8px}
+.landing-title{font-size:26px;font-weight:900;color:#111;margin-bottom:4px}
+.landing-sub{font-size:13px;color:#888;margin-bottom:40px}
+.landing-btn{width:100%;max-width:320px;height:64px;border-radius:18px;border:none;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;transition:transform .1s}
+.landing-btn:active{transform:scale(.97)}
+.landing-btn-main{background:#1a9e60;color:#fff;box-shadow:0 4px 20px rgba(26,158,96,.3)}
+.landing-btn-staff{background:#fff;color:#111;border:2px solid #e8e8e4;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.landing-btn-icon{font-size:22px}
+.staff-view{display:none}
 </style>
 </head>
 <body>
+
+<!-- 랜딩 화면 -->
+<div class="landing-bg" id="landing-screen">
+  <div class="landing-logo">✂️</div>
+  <div class="landing-title">브래뉴</div>
+  <div class="landing-sub">무엇을 하시겠어요?</div>
+  <button class="landing-btn landing-btn-main" onclick="enterAdmin()">
+    <span class="landing-btn-icon">👑</span>
+    <div style="text-align:left"><div>민장님 입장</div><div style="font-size:11px;font-weight:500;opacity:.8">전체 관리 화면</div></div>
+  </button>
+  <button class="landing-btn landing-btn-staff" onclick="enterStaff()">
+    <span class="landing-btn-icon">📨</span>
+    <div style="text-align:left"><div>업무 요청</div><div style="font-size:11px;font-weight:500;color:#888">스케줄 확인 + 요청</div></div>
+  </button>
+</div>
+
+<!-- 직원용 화면 -->
+<div class="staff-view" id="staff-view">
+  <div class="hdr">
+    <div>
+      <h1 id="hdr-title">업무 요청</h1>
+      <div class="sub" id="hdr-date"></div>
+    </div>
+    <button onclick="backToLanding()" style="background:#f0f0eb;border:1px solid #e8e8e4;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:#666;cursor:pointer;font-family:inherit">← 돌아가기</button>
+  </div>
+  <div class="content" style="max-width:480px;margin:0 auto">
+
+    <!-- 민장님 스케줄 -->
+    <div class="card">
+      <div class="sec">📅 민장님 이번 주 스케줄</div>
+      <div id="staff-sched-list"><div class="empty">불러오는 중...</div></div>
+    </div>
+
+    <!-- 업무 요청 폼 -->
+    <div class="card">
+      <div class="sec">📝 업무 요청하기</div>
+      <div id="staff-success" style="display:none;background:rgba(26,158,96,.1);border:1px solid rgba(26,158,96,.3);border-radius:12px;padding:14px;text-align:center;color:#1a9e60;font-weight:700;font-size:14px;margin-bottom:12px">✅ 요청이 전송됐어요!</div>
+
+      <div style="margin-bottom:12px">
+        <div class="tm-label">내 이름</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px" id="staff-name-chips">
+          <button class="cat-chip" onclick="selectStaffName(this)">채원</button>
+          <button class="cat-chip" onclick="selectStaffName(this)">현호</button>
+          <button class="cat-chip" onclick="selectStaffName(this)">수현</button>
+          <button class="cat-chip" onclick="selectStaffName(this)">강호</button>
+          <button class="cat-chip" onclick="selectStaffName(this)">예진</button>
+          <button class="cat-chip" onclick="selectStaffName(this)">기타</button>
+        </div>
+        <input type="text" id="staff-name-input" placeholder="또는 직접 입력" style="width:100%;height:40px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 14px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div class="tm-label">요청 제목</div>
+        <input type="text" id="staff-title" placeholder="예: 미팅 일정 조율" style="width:100%;height:40px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 14px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="flex:1">
+          <div class="tm-label">날짜</div>
+          <input type="date" id="staff-date" style="width:100%;height:40px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
+        </div>
+        <div style="flex:1">
+          <div class="tm-label">시간 (선택)</div>
+          <input type="time" id="staff-time" style="width:100%;height:40px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div class="tm-label">내용</div>
+        <textarea id="staff-memo" placeholder="요청 내용을 자세히 적어주세요" style="width:100%;height:80px;border:1.5px solid #e8e8e4;border-radius:12px;padding:10px 14px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111;resize:none"></textarea>
+      </div>
+
+      <button onclick="submitStaffRequest()" style="width:100%;height:50px;background:#1a9e60;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">📨 요청 보내기</button>
+    </div>
+  </div>
+</div>
+
 <div class="phone">
   <div class="hdr">
     <div><h1 id="hdr-title">모닝 루틴</h1><div class="sub" id="hdr-date"></div></div>
@@ -600,6 +688,15 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
           <div id="cal-todo-list2"></div>
           <div class="cal-prog-wrap"><div class="cal-prog-fill" id="cal-prog2"></div></div>
         </div>
+      </div>
+
+      <!-- 직원 업무 요청 -->
+      <div class="card" style="margin-top:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="sec" style="margin-bottom:0">📨 직원 업무 요청 <span id="req-badge" style="background:#ff4d6d;color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:2px 8px;display:none"></span></div>
+          <button onclick="loadStaffRequests()" style="background:none;border:1px solid #e8e8e4;border-radius:10px;padding:4px 10px;font-size:11px;color:#888;cursor:pointer;font-family:inherit">새로고침</button>
+        </div>
+        <div id="staff-req-list"><div class="empty" style="padding:12px 0">불러오는 중...</div></div>
       </div>
     </div>
 
@@ -2054,13 +2151,199 @@ function renderStats(){
   updateCloudCounts();
 }
 
+/* ══ STAFF REQUESTS ══ */
+async function loadStaffRequests(){
+  const el=document.getElementById('staff-req-list');
+  const badge=document.getElementById('req-badge');
+  try{
+    const res=await fetch('https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents/staff_requests?key='+FB_API_KEY+'&orderBy=createdAt desc&pageSize=20');
+    if(!res.ok){el.innerHTML='<div class="empty">요청을 불러오지 못했어요</div>';return;}
+    const json=await res.json();
+    const docs=json.documents||[];
+    const pending=docs.filter(d=>d.fields.status?.stringValue==='pending');
+    
+    if(pending.length>0){
+      badge.textContent=pending.length+'개 대기중';
+      badge.style.display='inline';
+    } else {
+      badge.style.display='none';
+    }
+    
+    if(!docs.length){el.innerHTML='<div class="empty">요청이 없어요</div>';return;}
+    
+    el.innerHTML=docs.map(d=>{
+      const f=d.fields;
+      const name=f.name?.stringValue||'';
+      const title=f.title?.stringValue||'';
+      const date=f.date?.stringValue||'';
+      const time=f.time?.stringValue||'';
+      const memo=f.memo?.stringValue||'';
+      const status=f.status?.stringValue||'pending';
+      const docId=d.name.split('/').pop();
+      const isPending=status==='pending';
+      
+      return '<div style="padding:12px;border-radius:12px;background:'+(isPending?'#fff8f0':'#f5f5f0')+';border:1px solid '+(isPending?'#ffd0a0':'#e8e8e4')+';margin-bottom:8px">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        +'<div style="font-size:14px;font-weight:700;color:#111">'+title+'</div>'
+        +'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+(isPending?'rgba(255,165,0,.15)':'rgba(26,158,96,.12)')+';color:'+(isPending?'#e07020':'#1a9e60')+'">'+(isPending?'대기중':'수락됨')+'</span>'
+        +'</div>'
+        +'<div style="font-size:12px;color:#666;margin-bottom:4px">👤 '+name+' · 📅 '+date+(time?' '+time:'')+'</div>'
+        +(memo?'<div style="font-size:12px;color:#888;margin-bottom:8px">'+memo+'</div>':'')
+        +(isPending?'<div style="display:flex;gap:6px">'
+          +'<button onclick="acceptRequest(\''+docId+'\',\''+title+'\',\''+date+'\',\''+time+'\',\''+name+'\')" style="flex:1;height:34px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✅ 수락</button>'
+          +'<button onclick="rejectRequest(\''+docId+'\')" style="flex:1;height:34px;background:rgba(255,77,109,.08);color:#ff4d6d;border:1px solid rgba(255,77,109,.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">❌ 거절</button>'
+          +'</div>':'')
+        +'</div>';
+    }).join('');
+  }catch(e){
+    el.innerHTML='<div class="empty">오류: '+e.message+'</div>';
+  }
+}
+
+async function acceptRequest(docId,title,date,time,name){
+  // Add to calendar
+  const newSched={id:Date.now(),date,title:'['+name+'] '+title,start:time||'09:00',end:'',color:'#5b9cf6',memo:'직원 요청',repeat:'none'};
+  schedules.push(newSched);
+  saveScheds();
+  renderCal();
+  
+  // Update status in Firebase
+  try{
+    await fetch('https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents/staff_requests/'+docId+'?key='+FB_API_KEY+'&updateMask.fieldPaths=status',{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fields:{status:{stringValue:'accepted'}}})
+    });
+  }catch(e){}
+  
+  scheduleSync();
+  alert('✅ 캘린더에 추가됐어요!');
+  loadStaffRequests();
+}
+
+async function rejectRequest(docId){
+  if(!confirm('요청을 거절할까요?'))return;
+  try{
+    await fetch('https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents/staff_requests/'+docId+'?key='+FB_API_KEY,{
+      method:'DELETE'
+    });
+  }catch(e){}
+  loadStaffRequests();
+}
+
+
+/* ══ LANDING ══ */
+function enterAdmin(){
+  document.getElementById('landing-screen').style.display='none';
+  document.getElementById('staff-view').style.display='none';
+  document.querySelector('.app-wrap').style.display='flex';
+  setTimeout(()=>{
+    renderTodos();renderExps();renderRoutine();
+    initCloud();
+    setTimeout(loadStaffRequests,2000);
+  },100);
+}
+
+function enterStaff(){
+  document.getElementById('landing-screen').style.display='none';
+  document.getElementById('staff-view').style.display='block';
+  document.querySelector('.app-wrap').style.display='none';
+  // Set today's date
+  document.getElementById('staff-date').value=todayStr();
+  loadStaffSchedule();
+}
+
+function backToLanding(){
+  document.getElementById('landing-screen').style.display='flex';
+  document.getElementById('staff-view').style.display='none';
+  document.querySelector('.app-wrap').style.display='none';
+}
+
+function selectStaffName(btn){
+  document.querySelectorAll('#staff-name-chips .cat-chip').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  if(btn.textContent!=='기타'){
+    document.getElementById('staff-name-input').value=btn.textContent;
+  } else {
+    document.getElementById('staff-name-input').value='';
+    document.getElementById('staff-name-input').focus();
+  }
+}
+
+async function loadStaffSchedule(){
+  const el=document.getElementById('staff-sched-list');
+  try{
+    const res=await fetch(FB_API+'?key='+FB_API_KEY);
+    if(!res.ok){el.innerHTML='<div class="empty">불러오기 실패</div>';return;}
+    const json=await res.json();
+    const f=json.fields;
+    if(!f||!f.schedules){el.innerHTML='<div class="empty">일정이 없어요</div>';return;}
+    const scheds=JSON.parse(f.schedules.stringValue||'[]');
+    const now=new Date();
+    const nowStr=todayStr();
+    const twoWeeksLater=new Date(now.getTime()+14*86400000).toISOString().slice(0,10);
+    const filtered=scheds.filter(s=>s.date>=nowStr&&s.date<=twoWeeksLater)
+      .sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+    if(!filtered.length){el.innerHTML='<div class="empty">이번 2주간 일정이 없어요</div>';return;}
+    
+    const groups={};
+    filtered.forEach(s=>{if(!groups[s.date])groups[s.date]=[];groups[s.date].push(s);});
+    
+    let html='';
+    Object.keys(groups).sort().forEach(date=>{
+      const d=new Date(date+'T00:00:00');
+      const dow=['일','월','화','수','목','금','토'][d.getDay()];
+      const isToday=date===nowStr;
+      html+='<div style="font-size:11px;font-weight:700;color:'+(isToday?'#1a9e60':'#888')+';padding:8px 0 4px;border-bottom:1.5px solid '+(isToday?'#1a9e60':'#eee')+';margin-bottom:6px">'+(d.getMonth()+1)+'월'+d.getDate()+'일 ('+dow+')'+(isToday?' · 오늘':'')+'</div>';
+      groups[date].forEach(s=>{
+        html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f0">'
+          +'<div style="width:4px;height:32px;border-radius:4px;background:'+s.color+';flex-shrink:0"></div>'
+          +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#111">'+s.title+'</div>'+(s.memo?'<div style="font-size:11px;color:#aaa">'+s.memo+'</div>':'')+'</div>'
+          +'<div style="font-size:11px;color:#888">'+s.start+(s.end?'~'+s.end:'')+'</div></div>';
+      });
+    });
+    el.innerHTML=html;
+  }catch(e){el.innerHTML='<div class="empty">오류가 발생했어요</div>';}
+}
+
+async function submitStaffRequest(){
+  const name=document.getElementById('staff-name-input').value.trim();
+  const title=document.getElementById('staff-title').value.trim();
+  const date=document.getElementById('staff-date').value;
+  const time=document.getElementById('staff-time').value;
+  const memo=document.getElementById('staff-memo').value.trim();
+  if(!name){alert('이름을 입력해주세요!');return;}
+  if(!title){alert('요청 제목을 입력해주세요!');return;}
+  if(!date){alert('날짜를 선택해주세요!');return;}
+  
+  const btn=document.querySelector('#staff-view button[onclick="submitStaffRequest()"]');
+  btn.textContent='전송 중...';btn.disabled=true;
+  try{
+    const reqData={fields:{
+      name:{stringValue:name},title:{stringValue:title},
+      date:{stringValue:date},time:{stringValue:time||''},
+      memo:{stringValue:memo},status:{stringValue:'pending'},
+      createdAt:{integerValue:String(Date.now())}
+    }};
+    const res=await fetch('https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents/staff_requests?key='+FB_API_KEY,{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(reqData)
+    });
+    if(!res.ok)throw new Error('전송 실패');
+    document.getElementById('staff-success').style.display='block';
+    document.getElementById('staff-title').value='';
+    document.getElementById('staff-time').value='';
+    document.getElementById('staff-memo').value='';
+    document.getElementById('staff-date').value=todayStr();
+    setTimeout(()=>document.getElementById('staff-success').style.display='none',3000);
+  }catch(e){alert('전송 실패. 다시 시도해주세요.');}
+  btn.textContent='📨 요청 보내기';btn.disabled=false;
+}
+
 /* ══ BOOT ══ */
-renderRoutine();
-renderTodos();
-renderExps();
-initCloud();
-// 30초마다 자동 동기화
-setInterval(()=>autoSyncCloud(), 30000);
+// App initialized but hidden - wait for landing selection
+// initCloud and renders called in enterAdmin()
+setInterval(()=>{if(document.querySelector('.app-wrap').style.display!=='none')autoSyncCloud();}, 30000);
+
 </script>
 </body>
 </html>
