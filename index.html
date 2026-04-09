@@ -332,60 +332,57 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 <!-- 직원용 화면 -->
 <div class="staff-view" id="staff-view">
   <div class="hdr">
-    <div>
-      <h1 id="hdr-title">업무 요청</h1>
-      <div class="sub" id="hdr-date"></div>
-    </div>
+    <div><h1>업무 요청</h1><div class="sub" id="staff-hdr-date"></div></div>
     <button onclick="backToLanding()" style="background:#f0f0eb;border:1px solid #e8e8e4;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:#666;cursor:pointer;font-family:inherit">← 돌아가기</button>
   </div>
-  <div class="content" style="max-width:480px;margin:0 auto">
+  <div class="content">
 
-    <!-- 민장님 스케줄 -->
-    <div class="card">
-      <div class="sec">📅 민장님 이번 주 스케줄</div>
-      <div id="staff-sched-list"><div class="empty">불러오는 중...</div></div>
+    <!-- 캘린더 -->
+    <div class="card" style="padding-bottom:10px">
+      <div class="cal-nav">
+        <button onclick="staffMoveMonth(-1)">&#8249;</button>
+        <span class="cal-month" id="staff-cal-title"></span>
+        <button onclick="staffMoveMonth(1)">&#8250;</button>
+      </div>
+      <table class="cal-grid">
+        <thead><tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr></thead>
+        <tbody id="staff-cal-body"></tbody>
+      </table>
+      <div style="font-size:12px;color:#888;text-align:center;padding:8px 0" id="staff-selected-date-label">날짜를 클릭해서 선택해주세요</div>
     </div>
 
-    <!-- 업무 요청 폼 -->
+    <!-- 요청 폼 -->
     <div class="card">
-      <div class="sec">📝 업무 요청하기</div>
       <div id="staff-success" style="display:none;background:rgba(26,158,96,.1);border:1px solid rgba(26,158,96,.3);border-radius:12px;padding:14px;text-align:center;color:#1a9e60;font-weight:700;font-size:14px;margin-bottom:12px">✅ 요청이 전송됐어요!</div>
 
       <div style="margin-bottom:12px">
-        <div class="tm-label">내 이름</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px" id="staff-name-chips">
-          <button class="cat-chip" onclick="selectStaffName(this)">채원</button>
-          <button class="cat-chip" onclick="selectStaffName(this)">현호</button>
-          <button class="cat-chip" onclick="selectStaffName(this)">수현</button>
-          <button class="cat-chip" onclick="selectStaffName(this)">강호</button>
-          <button class="cat-chip" onclick="selectStaffName(this)">예진</button>
-          <button class="cat-chip" onclick="selectStaffName(this)">기타</button>
-        </div>
-        <input type="text" id="staff-name-input" placeholder="또는 직접 입력" style="width:100%;height:40px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 14px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
+        <div class="tm-label">이름</div>
+        <input type="text" id="staff-name-input" placeholder="이름을 입력해주세요" style="width:100%;height:44px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 14px;font-size:15px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
       </div>
 
       <div style="margin-bottom:12px">
         <div class="tm-label">요청 제목</div>
-        <input type="text" id="staff-title" placeholder="예: 미팅 일정 조율" style="width:100%;height:40px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 14px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
+        <input type="text" id="staff-title" placeholder="예: 미팅 일정 조율" style="width:100%;height:44px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 14px;font-size:15px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <div style="flex:1">
-          <div class="tm-label">날짜</div>
-          <input type="date" id="staff-date" style="width:100%;height:40px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
+          <div class="tm-label">선택된 날짜</div>
+          <div id="staff-date-display" style="height:44px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 14px;font-size:14px;background:#f8f8f4;color:#888;display:flex;align-items:center">위 캘린더에서 선택</div>
+          <input type="hidden" id="staff-date">
         </div>
         <div style="flex:1">
           <div class="tm-label">시간 (선택)</div>
-          <input type="time" id="staff-time" style="width:100%;height:40px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
+          <input type="time" id="staff-time" style="width:100%;height:44px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
         </div>
       </div>
 
       <div style="margin-bottom:16px">
-        <div class="tm-label">내용</div>
-        <textarea id="staff-memo" placeholder="요청 내용을 자세히 적어주세요" style="width:100%;height:80px;border:1.5px solid #e8e8e4;border-radius:12px;padding:10px 14px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111;resize:none"></textarea>
+        <div class="tm-label">내용 (선택)</div>
+        <textarea id="staff-memo" placeholder="요청 내용을 적어주세요" style="width:100%;height:80px;border:1.5px solid #e8e8e4;border-radius:12px;padding:10px 14px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111;resize:none"></textarea>
       </div>
 
-      <button onclick="submitStaffRequest()" style="width:100%;height:50px;background:#1a9e60;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">📨 요청 보내기</button>
+      <button onclick="submitStaffRequest()" style="width:100%;height:52px;background:#1a9e60;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit">📨 요청 보내기</button>
     </div>
   </div>
 </div>
@@ -2248,9 +2245,11 @@ function enterStaff(){
   document.getElementById('landing-screen').style.display='none';
   document.getElementById('staff-view').style.display='block';
   document.querySelector('.app-wrap').style.display='none';
-  // Set today's date
-  document.getElementById('staff-date').value=todayStr();
-  loadStaffSchedule();
+  staffCalYear=new Date().getFullYear();
+  staffCalMonth=new Date().getMonth();
+  staffSelectedDate='';
+  document.getElementById('staff-hdr-date').textContent=new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
+  initStaffCal();
 }
 
 function backToLanding(){
@@ -2259,51 +2258,85 @@ function backToLanding(){
   document.querySelector('.app-wrap').style.display='none';
 }
 
-function selectStaffName(btn){
-  document.querySelectorAll('#staff-name-chips .cat-chip').forEach(b=>b.classList.remove('sel'));
-  btn.classList.add('sel');
-  if(btn.textContent!=='기타'){
-    document.getElementById('staff-name-input').value=btn.textContent;
-  } else {
-    document.getElementById('staff-name-input').value='';
-    document.getElementById('staff-name-input').focus();
-  }
-}
+/* Staff Calendar */
+let staffCalYear=new Date().getFullYear();
+let staffCalMonth=new Date().getMonth();
+let staffSelectedDate='';
+let staffSchedules=[];
 
-async function loadStaffSchedule(){
-  const el=document.getElementById('staff-sched-list');
+async function initStaffCal(){
+  // Load schedules from Firebase
   try{
     const res=await fetch(FB_API+'?key='+FB_API_KEY);
-    if(!res.ok){el.innerHTML='<div class="empty">불러오기 실패</div>';return;}
-    const json=await res.json();
-    const f=json.fields;
-    if(!f||!f.schedules){el.innerHTML='<div class="empty">일정이 없어요</div>';return;}
-    const scheds=JSON.parse(f.schedules.stringValue||'[]');
-    const now=new Date();
-    const nowStr=todayStr();
-    const twoWeeksLater=new Date(now.getTime()+14*86400000).toISOString().slice(0,10);
-    const filtered=scheds.filter(s=>s.date>=nowStr&&s.date<=twoWeeksLater)
-      .sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
-    if(!filtered.length){el.innerHTML='<div class="empty">이번 2주간 일정이 없어요</div>';return;}
-    
-    const groups={};
-    filtered.forEach(s=>{if(!groups[s.date])groups[s.date]=[];groups[s.date].push(s);});
-    
-    let html='';
-    Object.keys(groups).sort().forEach(date=>{
-      const d=new Date(date+'T00:00:00');
-      const dow=['일','월','화','수','목','금','토'][d.getDay()];
-      const isToday=date===nowStr;
-      html+='<div style="font-size:11px;font-weight:700;color:'+(isToday?'#1a9e60':'#888')+';padding:8px 0 4px;border-bottom:1.5px solid '+(isToday?'#1a9e60':'#eee')+';margin-bottom:6px">'+(d.getMonth()+1)+'월'+d.getDate()+'일 ('+dow+')'+(isToday?' · 오늘':'')+'</div>';
-      groups[date].forEach(s=>{
-        html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f0">'
-          +'<div style="width:4px;height:32px;border-radius:4px;background:'+s.color+';flex-shrink:0"></div>'
-          +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#111">'+s.title+'</div>'+(s.memo?'<div style="font-size:11px;color:#aaa">'+s.memo+'</div>':'')+'</div>'
-          +'<div style="font-size:11px;color:#888">'+s.start+(s.end?'~'+s.end:'')+'</div></div>';
-      });
-    });
-    el.innerHTML=html;
-  }catch(e){el.innerHTML='<div class="empty">오류가 발생했어요</div>';}
+    if(res.ok){
+      const json=await res.json();
+      const f=json.fields;
+      if(f&&f.schedules) staffSchedules=JSON.parse(f.schedules.stringValue||'[]');
+    }
+  }catch(e){}
+  renderStaffCal();
+}
+
+function renderStaffCal(){
+  const now=new Date();
+  const y=staffCalYear, m=staffCalMonth;
+  document.getElementById('staff-cal-title').textContent=MONTHS[m]+' '+y;
+  const firstDay=new Date(y,m,1).getDay();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const todayS=todayStr();
+  
+  let html='';
+  let day=1-firstDay;
+  for(let row=0;row<6;row++){
+    html+='<tr>';
+    for(let col=0;col<7;col++,day++){
+      if(day<1||day>daysInMonth){
+        html+='<td></td>';
+      } else {
+        const ds=fmtDate(y,m,day);
+        const isToday=ds===todayS;
+        const isSel=ds===staffSelectedDate;
+        const hasSched=staffSchedules.some(s=>s.date===ds);
+        const isPast=ds<todayS;
+        html+='<td onclick="staffSelectDate(this.dataset.d)" data-d="'+ds+'" style="cursor:'+(isPast?'default':'pointer')+';opacity:'+(isPast?'.4':'1')+'">'
+          +'<div class="day-num'+(isToday?' today':'')+(isSel?' selected':'')+'">'+(day)+'</div>'
+          +(hasSched?'<div style="width:5px;height:5px;border-radius:50%;background:#1a9e60;margin:0 auto"></div>':'<div style="height:5px"></div>')
+          +'</td>';
+      }
+    }
+    html+='</tr>';
+    if(day>daysInMonth)break;
+  }
+  document.getElementById('staff-cal-body').innerHTML=html;
+}
+
+function staffMoveMonth(dir){
+  staffCalMonth+=dir;
+  if(staffCalMonth>11){staffCalMonth=0;staffCalYear++;}
+  if(staffCalMonth<0){staffCalMonth=11;staffCalYear--;}
+  renderStaffCal();
+}
+
+function staffSelectDate(ds_or_el){
+  const ds=typeof ds_or_el==='string'?ds_or_el:ds_or_el;
+  const today=todayStr();
+  if(ds<today)return;
+  staffSelectedDate=ds;
+  document.getElementById('staff-date').value=ds;
+  const d=new Date(ds+'T00:00:00');
+  const dow=['일','월','화','수','목','금','토'][d.getDay()];
+  const label=(d.getMonth()+1)+'월'+d.getDate()+'일 ('+dow+')'+(ds===today?' · 오늘':'');
+  document.getElementById('staff-date-display').textContent=label;
+  document.getElementById('staff-date-display').style.color='#111';
+  // Show schedules for selected date
+  const daySched=staffSchedules.filter(s=>s.date===ds);
+  const selLabel=document.getElementById('staff-selected-date-label');
+  if(daySched.length){
+    selLabel.innerHTML='<span style="color:#e07020;font-weight:600">⚠️ 이날 일정 있음: '+daySched.map(s=>s.title).join(', ')+'</span>';
+  } else {
+    selLabel.innerHTML='<span style="color:#1a9e60;font-weight:600">✅ '+label+' 선택됨</span>';
+  }
+  renderStaffCal();
 }
 
 async function submitStaffRequest(){
