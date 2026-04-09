@@ -456,6 +456,17 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
         <textarea id="staff-memo" placeholder="요청 내용을 적어주세요" style="width:100%;height:80px;border:1.5px solid #e8e8e4;border-radius:12px;padding:10px 14px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111;resize:none"></textarea>
       </div>
 
+      <!-- 비공개 토글 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8f8f4;border-radius:12px;border:1.5px solid #e8e8e4;margin-bottom:12px" onclick="togglePrivate()" style="cursor:pointer">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#111">🔒 비공개 요청</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">민장님만 내용을 볼 수 있어요</div>
+        </div>
+        <div id="private-toggle" style="width:46px;height:26px;border-radius:20px;background:#ddd;position:relative;transition:background .2s;cursor:pointer">
+          <div id="private-thumb" style="width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
+        </div>
+      </div>
+
       <button onclick="submitStaffRequest()" style="width:100%;height:52px;background:#1a9e60;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit">📨 요청 보내기</button>
     </div>
   </div>
@@ -2258,13 +2269,14 @@ async function loadStaffRequests(){
       const status=f.status?.stringValue||'pending';
       const docId=d.name.split('/').pop();
       const isPending=status==='pending';
+      const isPrivate=d.fields.isPrivate?.booleanValue||false;
       
       return '<div style="padding:12px;border-radius:12px;background:'+(isPending?'#fff8f0':'#f5f5f0')+';border:1px solid '+(isPending?'#ffd0a0':'#e8e8e4')+';margin-bottom:8px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
         +'<div style="font-size:14px;font-weight:700;color:#111">'+title+'</div>'
         +'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+(isPending?'rgba(255,165,0,.15)':'rgba(26,158,96,.12)')+';color:'+(isPending?'#e07020':'#1a9e60')+'">'+(isPending?'대기중':'수락됨')+'</span>'
         +'</div>'
-        +'<div style="font-size:12px;color:#666;margin-bottom:4px">👤 '+name+' · 📅 '+date+(time?' '+time:'')+'</div>'
+        +'<div style="font-size:12px;color:#666;margin-bottom:4px">'+( isPrivate?'🔒 ':'')+' 👤 '+name+' · 📅 '+date+(time?' '+time:'')+'</div>'
         +(memo?'<div style="font-size:12px;color:#888;margin-bottom:8px">'+memo+'</div>':'')
         +(isPending?'<div style="display:flex;gap:6px">'
           +'<button onclick="acceptRequest(\''+docId+'\',\''+title+'\',\''+date+'\',\''+time+'\',\''+name+'\')" style="flex:1;height:34px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✅ 수락</button>'
@@ -2554,6 +2566,16 @@ function setStaffView(period, btn){
   el.innerHTML=html;
 }
 
+let isPrivateRequest=false;
+
+function togglePrivate(){
+  isPrivateRequest=!isPrivateRequest;
+  const toggle=document.getElementById('private-toggle');
+  const thumb=document.getElementById('private-thumb');
+  toggle.style.background=isPrivateRequest?'#1a9e60':'#ddd';
+  thumb.style.left=isPrivateRequest?'22px':'2px';
+}
+
 async function submitStaffRequest(){
   const name=document.getElementById('staff-name-input').value.trim();
   const title=document.getElementById('staff-title').value.trim();
@@ -2570,7 +2592,7 @@ async function submitStaffRequest(){
     const reqData={fields:{
       name:{stringValue:name},title:{stringValue:title},
       date:{stringValue:date},time:{stringValue:time||''},
-      memo:{stringValue:memo},status:{stringValue:'pending'},
+      memo:{stringValue:isPrivateRequest?'🔒 비공개':memo},status:{stringValue:'pending'},isPrivate:{booleanValue:isPrivateRequest},
       createdAt:{integerValue:String(Date.now())}
     }};
     const res=await fetch('https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents/staff_requests?key='+FB_API_KEY,{
