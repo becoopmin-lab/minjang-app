@@ -310,6 +310,24 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 .landing-btn-staff{background:#fff;color:#111;border:2px solid #e8e8e4;box-shadow:0 2px 12px rgba(0,0,0,.06)}
 .landing-btn-icon{font-size:22px}
 .staff-view{display:none;position:fixed;inset:0;z-index:500;background:#f5f5f0;overflow-y:auto}
+
+.pin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center}
+.pin-box{background:#fff;border-radius:24px;padding:28px 24px;width:300px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.15)}
+.pin-title{font-size:18px;font-weight:800;color:#111;margin-bottom:6px}
+.pin-sub{font-size:12px;color:#888;margin-bottom:20px}
+.pin-display{font-size:32px;letter-spacing:12px;font-weight:700;color:#111;height:48px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:#e0e0e0;display:inline-block;margin:0 4px}
+.pin-dot.filled{background:#1a9e60}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.pin-btn{height:56px;border:1.5px solid #e8e8e4;border-radius:14px;font-size:20px;font-weight:700;color:#111;background:#f8f8f4;cursor:pointer;font-family:inherit;transition:all .1s}
+.pin-btn:active{background:#e8e8e4;transform:scale(.95)}
+.pin-btn.del{font-size:16px;color:#888}
+.pin-error{color:#ff4d6d;font-size:13px;font-weight:600;height:20px;margin-top:4px}
+
+.cal-view-tab{flex:1;height:32px;border:1.5px solid #e8e8e4;border-radius:10px;font-size:12px;font-weight:700;color:#888;background:#f8f8f4;cursor:pointer;font-family:inherit;transition:all .15s}
+.cal-view-tab.on{background:#1a9e60;color:#fff;border-color:#1a9e60}
+.cal-view-panel{display:none}
+.cal-view-panel.on{display:block}
 </style>
 </head>
 <body>
@@ -319,14 +337,55 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
   <div class="landing-logo">✂️</div>
   <div class="landing-title">브래뉴</div>
   <div class="landing-sub">무엇을 하시겠어요?</div>
-  <button class="landing-btn landing-btn-main" onclick="enterAdmin()">
+  <button class="landing-btn landing-btn-main" onclick="showAdminPass()">
     <span class="landing-btn-icon">👑</span>
     <div style="text-align:left"><div>민장님 입장</div><div style="font-size:11px;font-weight:500;opacity:.8">전체 관리 화면</div></div>
   </button>
+  <!-- 비밀번호 입력 -->
+  <div id="admin-pass-box" style="display:none;width:100%;max-width:320px;margin-bottom:14px">
+    <div style="font-size:13px;color:#666;margin-bottom:8px;text-align:center">🔒 비밀번호를 입력해주세요</div>
+    <div style="display:flex;gap:8px">
+      <input type="password" id="admin-pass-input" placeholder="비밀번호" maxlength="10"
+        style="flex:1;height:44px;border:1.5px solid #1a9e60;border-radius:12px;padding:0 14px;font-size:16px;font-family:inherit;outline:none;text-align:center;letter-spacing:4px"
+        onkeypress="if(event.key==='Enter')checkAdminPass()">
+      <button onclick="checkAdminPass()" style="height:44px;padding:0 16px;background:#1a9e60;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">확인</button>
+    </div>
+    <div id="admin-pass-err" style="display:none;color:#ff4d6d;font-size:12px;text-align:center;margin-top:6px">비밀번호가 틀렸어요!</div>
+  </div>
   <button class="landing-btn landing-btn-staff" onclick="enterStaff()">
     <span class="landing-btn-icon">📨</span>
     <div style="text-align:left"><div>업무 요청</div><div style="font-size:11px;font-weight:500;color:#888">스케줄 확인 + 요청</div></div>
   </button>
+</div>
+
+
+<!-- PIN 입력 모달 -->
+<div class="pin-overlay" id="pin-overlay" style="display:none">
+  <div class="pin-box">
+    <div class="pin-title">🔐 민장님 입장</div>
+    <div class="pin-sub">비밀번호 4자리를 입력해주세요</div>
+    <div class="pin-display" id="pin-display">
+      <span class="pin-dot" id="pd0"></span>
+      <span class="pin-dot" id="pd1"></span>
+      <span class="pin-dot" id="pd2"></span>
+      <span class="pin-dot" id="pd3"></span>
+    </div>
+    <div class="pin-grid">
+      <button class="pin-btn" onclick="pinInput('1')">1</button>
+      <button class="pin-btn" onclick="pinInput('2')">2</button>
+      <button class="pin-btn" onclick="pinInput('3')">3</button>
+      <button class="pin-btn" onclick="pinInput('4')">4</button>
+      <button class="pin-btn" onclick="pinInput('5')">5</button>
+      <button class="pin-btn" onclick="pinInput('6')">6</button>
+      <button class="pin-btn" onclick="pinInput('7')">7</button>
+      <button class="pin-btn" onclick="pinInput('8')">8</button>
+      <button class="pin-btn" onclick="pinInput('9')">9</button>
+      <button class="pin-btn" onclick="pinCancel()" style="font-size:13px;color:#888">취소</button>
+      <button class="pin-btn" onclick="pinInput('0')">0</button>
+      <button class="pin-btn del" onclick="pinDelete()">⌫</button>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+  </div>
 </div>
 
 <!-- 직원용 화면 -->
@@ -352,6 +411,17 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
       <div style="font-size:12px;color:#888;text-align:center;padding:8px 0" id="staff-selected-date-label">날짜를 클릭해서 선택해주세요</div>
       <!-- 선택된 날 일정 -->
       <div id="staff-day-scheds" style="display:none;margin-top:8px;border-top:1px solid #f0f0f0;padding-top:10px"></div>
+    </div>
+
+    <!-- 일정 기간 필터 -->
+    <div class="card" style="padding:12px">
+      <div style="display:flex;gap:6px;margin-bottom:12px">
+        <button class="vsw on" id="sv-day" onclick="setStaffView('day',this)">일별</button>
+        <button class="vsw" id="sv-week" onclick="setStaffView('week',this)">주별</button>
+        <button class="vsw" id="sv-month" onclick="setStaffView('month',this)">월별</button>
+        <button class="vsw" id="sv-year" onclick="setStaffView('year',this)">년별</button>
+      </div>
+      <div id="staff-sched-filtered"><div class="empty">날짜를 선택하거나 기간을 클릭하세요</div></div>
     </div>
 
     <!-- 요청 폼 -->
@@ -646,6 +716,13 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
             <thead><tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr></thead>
             <tbody id="cal-body"></tbody>
           </table>
+          <!-- 일별/주별/월별/년별 탭 -->
+          <div style="display:flex;gap:6px;padding:10px 4px 0;border-top:1px solid #f0f0f0;margin-top:8px">
+            <button class="cal-view-tab on" id="cvt-day" onclick="setCalViewTab('day',this)">일별</button>
+            <button class="cal-view-tab" id="cvt-week" onclick="setCalViewTab('week',this)">주별</button>
+            <button class="cal-view-tab" id="cvt-month" onclick="setCalViewTab('month',this)">월별</button>
+            <button class="cal-view-tab" id="cvt-year" onclick="setCalViewTab('year',this)">년별</button>
+          </div>
         </div>
         <div class="card">
           <div class="day-panel-hdr">
@@ -2232,8 +2309,79 @@ async function rejectRequest(docId){
 }
 
 
+
+/* ══ PIN ══ */
+const ADMIN_PIN='3456';
+let pinValue='';
+
+function pinInput(n){
+  if(pinValue.length>=4)return;
+  pinValue+=n;
+  updatePinDisplay();
+  if(pinValue.length===4){
+    setTimeout(()=>{
+      if(pinValue===ADMIN_PIN){
+        document.getElementById('pin-overlay').style.display='none';
+        document.getElementById('pin-error').textContent='';
+        enterAdminConfirmed();
+      } else {
+        document.getElementById('pin-error').textContent='❌ 비밀번호가 틀렸어요';
+        pinValue='';
+        updatePinDisplay();
+        setTimeout(()=>document.getElementById('pin-error').textContent='',1500);
+      }
+    },100);
+  }
+}
+
+function pinDelete(){
+  pinValue=pinValue.slice(0,-1);
+  updatePinDisplay();
+}
+
+function pinCancel(){
+  document.getElementById('pin-overlay').style.display='none';
+  pinValue='';
+  updatePinDisplay();
+}
+
+function updatePinDisplay(){
+  for(let i=0;i<4;i++){
+    const dot=document.getElementById('pd'+i);
+    if(dot) dot.classList.toggle('filled', i<pinValue.length);
+  }
+}
+
 /* ══ LANDING ══ */
+function showAdminPass(){
+  const box=document.getElementById('admin-pass-box');
+  box.style.display=box.style.display==='none'?'block':'none';
+  if(box.style.display==='block'){
+    document.getElementById('admin-pass-input').value='';
+    document.getElementById('admin-pass-err').style.display='none';
+    setTimeout(()=>document.getElementById('admin-pass-input').focus(),100);
+  }
+}
+
+function checkAdminPass(){
+  const val=document.getElementById('admin-pass-input').value;
+  if(val==='3456'){
+    document.getElementById('admin-pass-box').style.display='none';
+    enterAdmin();
+  } else {
+    document.getElementById('admin-pass-err').style.display='block';
+    document.getElementById('admin-pass-input').value='';
+    document.getElementById('admin-pass-input').focus();
+  }
+}
+
 function enterAdmin(){
+  document.getElementById('pin-overlay').style.display='flex';
+  pinValue='';
+  updatePinDisplay();
+}
+
+function enterAdminConfirmed(){
   document.getElementById('landing-screen').style.display='none';
   document.getElementById('staff-view').style.display='none';
   document.getElementById('admin-app').style.display='flex';
@@ -2352,6 +2500,60 @@ function staffSelectDate(el){
 }
 
 
+function setStaffView(period, btn){
+  document.querySelectorAll('#sv-day,#sv-week,#sv-month,#sv-year').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  
+  const today=todayStr();
+  const now=new Date();
+  let startDate='', endDate='';
+  
+  if(period==='day'){
+    const base=staffSelectedDate||today;
+    startDate=base; endDate=base;
+  } else if(period==='week'){
+    const base=staffSelectedDate?new Date(staffSelectedDate+'T00:00:00'):now;
+    const dow=base.getDay();
+    const weekStart=new Date(base); weekStart.setDate(base.getDate()-dow);
+    const weekEnd=new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6);
+    startDate=weekStart.toISOString().slice(0,10);
+    endDate=weekEnd.toISOString().slice(0,10);
+  } else if(period==='month'){
+    const base=staffSelectedDate?new Date(staffSelectedDate+'T00:00:00'):now;
+    startDate=fmtDate(base.getFullYear(),base.getMonth(),1);
+    const lastDay=new Date(base.getFullYear(),base.getMonth()+1,0).getDate();
+    endDate=fmtDate(base.getFullYear(),base.getMonth(),lastDay);
+  } else if(period==='year'){
+    const y=staffSelectedDate?staffSelectedDate.slice(0,4):String(now.getFullYear());
+    startDate=y+'-01-01'; endDate=y+'-12-31';
+  }
+  
+  const filtered=staffSchedules.filter(s=>s.date>=startDate&&s.date<=endDate)
+    .sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+  
+  const el=document.getElementById('staff-sched-filtered');
+  if(!filtered.length){el.innerHTML='<div class="empty">이 기간에 일정이 없어요</div>';return;}
+  
+  // Group by date
+  const groups={};
+  filtered.forEach(s=>{if(!groups[s.date])groups[s.date]=[];groups[s.date].push(s);});
+  let html='';
+  Object.keys(groups).sort().forEach(date=>{
+    const d=new Date(date+'T00:00:00');
+    const dow=['일','월','화','수','목','금','토'][d.getDay()];
+    const isToday=date===today;
+    html+='<div style="font-size:11px;font-weight:700;color:'+(isToday?'#1a9e60':'#888')+';padding:8px 0 4px;border-bottom:1.5px solid '+(isToday?'#1a9e60':'#eee')+';margin-bottom:6px">'+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+dow+')'+(isToday?' · 오늘':'')+'</div>';
+    groups[date].forEach(s=>{
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f0">'
+        +'<div style="width:4px;height:32px;border-radius:4px;background:'+s.color+';flex-shrink:0"></div>'
+        +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#111">'+s.title+'</div>'+(s.memo?'<div style="font-size:11px;color:#aaa">'+s.memo+'</div>':'')+'</div>'
+        +'<div style="font-size:11px;color:#888">'+s.start+(s.end?' ~ '+s.end:'')+'</div>'
+        +'</div>';
+    });
+  });
+  el.innerHTML=html;
+}
+
 async function submitStaffRequest(){
   const name=document.getElementById('staff-name-input').value.trim();
   const title=document.getElementById('staff-title').value.trim();
@@ -2385,6 +2587,110 @@ async function submitStaffRequest(){
   btn.textContent='📨 요청 보내기';btn.disabled=false;
 }
 
+
+/* ══ CALENDAR VIEW TABS ══ */
+let calViewTab='day';
+
+function setCalViewTab(tab, btn){
+  calViewTab=tab;
+  document.querySelectorAll('.cal-view-tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.cal-view-panel').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('cvp-'+tab).classList.add('on');
+  renderCalViewTab(tab);
+}
+
+function renderCalViewTab(tab){
+  const nowStr=todayStr();
+  if(tab==='day'){
+    // Show selected day or today's schedules + todos
+    const ds=selDay||nowStr;
+    const d=new Date(ds+'T00:00:00');
+    const dow=['일','월','화','수','목','금','토'][d.getDay()];
+    const label=(d.getMonth()+1)+'월'+d.getDate()+'일 ('+dow+')'+(ds===nowStr?' · 오늘':'');
+    const dayScheds=schedules.filter(s=>s.date===ds);
+    const dayTodos=allTodos.filter(t=>!t.archived&&t.dueDate===ds);
+    let html='<div class="card" style="margin-top:8px"><div style="font-size:13px;font-weight:700;color:#1a9e60;margin-bottom:10px">'+label+'</div>';
+    if(dayScheds.length){
+      html+='<div style="font-size:11px;font-weight:700;color:#888;margin-bottom:6px">📅 일정</div>';
+      dayScheds.forEach(s=>{html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f5f5f0"><div style="width:4px;height:28px;border-radius:4px;background:'+s.color+'"></div><div style="flex:1"><div style="font-size:13px;font-weight:600;color:#111">'+s.title+'</div>'+(s.memo?'<div style="font-size:11px;color:#aaa">'+s.memo+'</div>':'')+'</div><div style="font-size:11px;color:#888">'+s.start+(s.end?'~'+s.end:'')+'</div></div>';});
+    }
+    if(dayTodos.length){
+      html+='<div style="font-size:11px;font-weight:700;color:#888;margin:'+(dayScheds.length?'10px':'0')+'0 6px">✅ 할 일</div>';
+      dayTodos.forEach(t=>{html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5f5f0"><div class="ck '+(t.done?'y':'')+'" onclick="togT('+t.id+')"></div><div style="font-size:13px;color:#111;'+(t.done?'text-decoration:line-through;color:#aaa':'')+'">' +t.text+'</div></div>';});
+    }
+    if(!dayScheds.length&&!dayTodos.length) html+='<div class="empty">이날 일정이 없어요</div>';
+    html+='</div>';
+    document.getElementById('day-panel-wrap').innerHTML=html;
+
+  } else if(tab==='week'){
+    // Show this week
+    const now=new Date();
+    const weekStart=new Date(now);
+    weekStart.setDate(now.getDate()-now.getDay());
+    let html='<div class="card" style="margin-top:8px">';
+    for(let i=0;i<7;i++){
+      const d=new Date(weekStart);
+      d.setDate(weekStart.getDate()+i);
+      const ds=d.toISOString().slice(0,10);
+      const dow=['일','월','화','수','목','금','토'][d.getDay()];
+      const isToday=ds===nowStr;
+      const dayScheds=schedules.filter(s=>s.date===ds);
+      const dayTodos=allTodos.filter(t=>!t.archived&&t.dueDate===ds);
+      if(!dayScheds.length&&!dayTodos.length) continue;
+      html+='<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:'+(isToday?'#1a9e60':'#888')+';padding:6px 0;border-bottom:2px solid '+(isToday?'#1a9e60':'#eee')+';margin-bottom:6px">'+(d.getMonth()+1)+'월'+d.getDate()+'일 ('+dow+')'+(isToday?' · 오늘':'')+'</div>';
+      dayScheds.forEach(s=>{html+='<div style="display:flex;align-items:center;gap:6px;padding:5px 0"><div style="width:4px;height:24px;border-radius:4px;background:'+s.color+'"></div><div style="font-size:12px;font-weight:600;color:#111;flex:1">'+s.title+'</div><div style="font-size:11px;color:#888">'+s.start+'</div></div>';});
+      dayTodos.forEach(t=>{html+='<div style="display:flex;align-items:center;gap:6px;padding:4px 0"><div style="font-size:11px">✅</div><div style="font-size:12px;color:#111;'+(t.done?'text-decoration:line-through;color:#aaa':'')+'">' +t.text+'</div></div>';});
+      html+='</div>';
+    }
+    html+='</div>';
+    document.getElementById('week-panel-wrap').innerHTML=html;
+
+  } else if(tab==='month'){
+    // Monthly summary
+    const y=calYear, m=calMonth;
+    const monthScheds=schedules.filter(s=>s.date.startsWith(fmtDate(y,m,1).slice(0,7)));
+    const monthTodos=allTodos.filter(t=>!t.archived&&t.dueDate&&t.dueDate.startsWith(fmtDate(y,m,1).slice(0,7)));
+    const totalExp=exps.filter(e=>e.date&&e.date.startsWith(fmtDate(y,m,1).slice(0,7))).reduce((a,e)=>a+e.amt,0);
+    let html='<div class="card" style="margin-top:8px">'
+      +'<div style="font-size:14px;font-weight:700;color:#111;margin-bottom:12px">'+MONTHS[m]+' 요약</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+      +'<div style="text-align:center;padding:10px;background:#f5f5f0;border-radius:10px"><div style="font-size:20px;font-weight:800;color:#1a9e60">'+monthScheds.length+'</div><div style="font-size:11px;color:#888">일정</div></div>'
+      +'<div style="text-align:center;padding:10px;background:#f5f5f0;border-radius:10px"><div style="font-size:20px;font-weight:800;color:#5b9cf6">'+monthTodos.length+'</div><div style="font-size:11px;color:#888">할 일</div></div>'
+      +'<div style="text-align:center;padding:10px;background:#f5f5f0;border-radius:10px"><div style="font-size:14px;font-weight:800;color:#ff7043">₩'+Math.round(totalExp/10000)+'만</div><div style="font-size:11px;color:#888">지출</div></div>'
+      +'</div>';
+    if(monthScheds.length){
+      html+='<div style="font-size:11px;font-weight:700;color:#888;margin-bottom:6px">📅 이달 일정</div>';
+      monthScheds.slice(0,10).forEach(s=>{html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5f5f0"><div style="width:4px;height:24px;border-radius:4px;background:'+s.color+'"></div><div style="flex:1;font-size:12px;font-weight:600;color:#111">'+s.title+'</div><div style="font-size:11px;color:#888">'+s.date.slice(5).replace('-','/')+'</div></div>';});
+    }
+    html+='</div>';
+    document.getElementById('month-summary-wrap').innerHTML=html;
+
+  } else if(tab==='year'){
+    // Yearly summary
+    const y=calYear;
+    const yearScheds=schedules.filter(s=>s.date.startsWith(y));
+    const yearExps=exps.filter(e=>e.date&&e.date.startsWith(y));
+    const yearTotal=yearExps.reduce((a,e)=>a+e.amt,0);
+    let html='<div class="card" style="margin-top:8px">'
+      +'<div style="font-size:14px;font-weight:700;color:#111;margin-bottom:12px">'+y+'년 요약</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
+      +'<div style="text-align:center;padding:12px;background:#f5f5f0;border-radius:12px"><div style="font-size:24px;font-weight:800;color:#1a9e60">'+yearScheds.length+'</div><div style="font-size:11px;color:#888">총 일정</div></div>'
+      +'<div style="text-align:center;padding:12px;background:#f5f5f0;border-radius:12px"><div style="font-size:18px;font-weight:800;color:#ff7043">₩'+Math.round(yearTotal/10000)+'만</div><div style="font-size:11px;color:#888">총 지출</div></div>'
+      +'</div>';
+    // Monthly breakdown
+    html+='<div style="font-size:11px;font-weight:700;color:#888;margin-bottom:8px">월별 지출</div>';
+    for(let m=0;m<12;m++){
+      const mStr=String(m+1).padStart(2,'0');
+      const mTotal=yearExps.filter(e=>e.date&&e.date.slice(5,7)===mStr).reduce((a,e)=>a+e.amt,0);
+      if(!mTotal) continue;
+      const pct=Math.min(100,Math.round(mTotal/yearTotal*100));
+      html+='<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="color:#555">'+(m+1)+'월</span><span style="font-weight:700;color:#111">₩'+mTotal.toLocaleString()+'</span></div><div style="height:6px;background:#f0f0f0;border-radius:4px"><div style="height:100%;width:'+pct+'%;background:#ff7043;border-radius:4px"></div></div></div>';
+    }
+    html+='</div>';
+    document.getElementById('year-summary-wrap').innerHTML=html;
+  }
+}
 /* ══ BOOT ══ */
 // App initialized but hidden - wait for landing selection
 // initCloud and renders called in enterAdmin()
