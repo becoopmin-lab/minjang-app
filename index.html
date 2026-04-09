@@ -332,13 +332,14 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 <!-- 직원용 화면 -->
 <div class="staff-view" id="staff-view">
   <div class="hdr">
-    <div><h1>업무 요청</h1><div class="sub" id="staff-hdr-date"></div></div>
+    <div><h1>📨 업무 요청</h1><div class="sub" id="staff-hdr-date"></div></div>
     <button onclick="backToLanding()" style="background:#f0f0eb;border:1px solid #e8e8e4;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:#666;cursor:pointer;font-family:inherit">← 돌아가기</button>
   </div>
   <div class="content">
 
-    <!-- 캘린더 -->
+    <!-- 민장님 캘린더 -->
     <div class="card" style="padding-bottom:10px">
+      <div class="sec" style="margin-bottom:8px">📅 민장님 일정</div>
       <div class="cal-nav">
         <button onclick="staffMoveMonth(-1)">&#8249;</button>
         <span class="cal-month" id="staff-cal-title"></span>
@@ -349,10 +350,13 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
         <tbody id="staff-cal-body"></tbody>
       </table>
       <div style="font-size:12px;color:#888;text-align:center;padding:8px 0" id="staff-selected-date-label">날짜를 클릭해서 선택해주세요</div>
+      <!-- 선택된 날 일정 -->
+      <div id="staff-day-scheds" style="display:none;margin-top:8px;border-top:1px solid #f0f0f0;padding-top:10px"></div>
     </div>
 
     <!-- 요청 폼 -->
     <div class="card">
+      <div class="sec" style="margin-bottom:12px">✏️ 업무 요청하기</div>
       <div id="staff-success" style="display:none;background:rgba(26,158,96,.1);border:1px solid rgba(26,158,96,.3);border-radius:12px;padding:14px;text-align:center;color:#1a9e60;font-weight:700;font-size:14px;margin-bottom:12px">✅ 요청이 전송됐어요!</div>
 
       <div style="margin-bottom:12px">
@@ -367,12 +371,12 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <div style="flex:1">
-          <div class="tm-label">선택된 날짜</div>
-          <div id="staff-date-display" style="height:44px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 14px;font-size:14px;background:#f8f8f4;color:#888;display:flex;align-items:center">위 캘린더에서 선택</div>
+          <div class="tm-label">날짜 (위 캘린더 클릭)</div>
+          <div id="staff-date-display" style="height:44px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 14px;font-size:13px;background:#f8f8f4;color:#aaa;display:flex;align-items:center">캘린더에서 선택</div>
           <input type="hidden" id="staff-date">
         </div>
         <div style="flex:1">
-          <div class="tm-label">시간 (선택)</div>
+          <div class="tm-label">시간</div>
           <input type="time" id="staff-time" style="width:100%;height:44px;border:1.5px solid #e8e8e4;border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111">
         </div>
       </div>
@@ -386,7 +390,6 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
     </div>
   </div>
 </div>
-
 <div class="phone" style="display:none" id="admin-app">
   <div class="hdr">
     <div><h1 id="hdr-title">모닝 루틴</h1><div class="sub" id="hdr-date"></div></div>
@@ -2265,7 +2268,6 @@ let staffSelectedDate='';
 let staffSchedules=[];
 
 async function initStaffCal(){
-  // Load schedules from Firebase
   try{
     const res=await fetch(FB_API+'?key='+FB_API_KEY);
     if(res.ok){
@@ -2278,13 +2280,11 @@ async function initStaffCal(){
 }
 
 function renderStaffCal(){
-  const now=new Date();
   const y=staffCalYear, m=staffCalMonth;
   document.getElementById('staff-cal-title').textContent=MONTHS[m]+' '+y;
   const firstDay=new Date(y,m,1).getDay();
   const daysInMonth=new Date(y,m+1,0).getDate();
   const todayS=todayStr();
-  
   let html='';
   let day=1-firstDay;
   for(let row=0;row<6;row++){
@@ -2296,11 +2296,11 @@ function renderStaffCal(){
         const ds=fmtDate(y,m,day);
         const isToday=ds===todayS;
         const isSel=ds===staffSelectedDate;
-        const hasSched=staffSchedules.some(s=>s.date===ds);
+        const dayScheds=staffSchedules.filter(s=>s.date===ds);
         const isPast=ds<todayS;
-        html+='<td onclick="staffSelectDate(this.dataset.d)" data-d="'+ds+'" style="cursor:'+(isPast?'default':'pointer')+';opacity:'+(isPast?'.4':'1')+'">'
-          +'<div class="day-num'+(isToday?' today':'')+(isSel?' selected':'')+'">'+(day)+'</div>'
-          +(hasSched?'<div style="width:5px;height:5px;border-radius:50%;background:#1a9e60;margin:0 auto"></div>':'<div style="height:5px"></div>')
+        html+='<td onclick="staffSelectDate(this)" data-d="'+ds+'" style="cursor:'+(isPast?'default':'pointer')+';opacity:'+(isPast?'.4':'1')+'">'
+          +'<div class="day-num'+(isToday?' today':'')+(isSel?' selected':'')+'">'+day+'</div>'
+          +(dayScheds.length?'<div style="display:flex;justify-content:center;gap:2px;flex-wrap:wrap;margin-top:1px">'+dayScheds.slice(0,3).map(s=>'<div style="width:5px;height:5px;border-radius:50%;background:'+s.color+'"></div>').join('')+'</div>':'<div style="height:6px"></div>')
           +'</td>';
       }
     }
@@ -2317,27 +2317,40 @@ function staffMoveMonth(dir){
   renderStaffCal();
 }
 
-function staffSelectDate(ds_or_el){
-  const ds=typeof ds_or_el==='string'?ds_or_el:ds_or_el;
+function staffSelectDate(el){
+  const ds=el.dataset.d;
   const today=todayStr();
   if(ds<today)return;
   staffSelectedDate=ds;
   document.getElementById('staff-date').value=ds;
   const d=new Date(ds+'T00:00:00');
   const dow=['일','월','화','수','목','금','토'][d.getDay()];
-  const label=(d.getMonth()+1)+'월'+d.getDate()+'일 ('+dow+')'+(ds===today?' · 오늘':'');
-  document.getElementById('staff-date-display').textContent=label;
-  document.getElementById('staff-date-display').style.color='#111';
-  // Show schedules for selected date
-  const daySched=staffSchedules.filter(s=>s.date===ds);
+  const label=(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+dow+')'+(ds===today?' · 오늘':'');
+  const display=document.getElementById('staff-date-display');
+  display.textContent=label;
+  display.style.color='#111';
+
+  // Show schedules for this day
+  const dayScheds=staffSchedules.filter(s=>s.date===ds);
+  const schedsEl=document.getElementById('staff-day-scheds');
   const selLabel=document.getElementById('staff-selected-date-label');
-  if(daySched.length){
-    selLabel.innerHTML='<span style="color:#e07020;font-weight:600">⚠️ 이날 일정 있음: '+daySched.map(s=>s.title).join(', ')+'</span>';
+  if(dayScheds.length){
+    selLabel.innerHTML='<span style="color:#e07020;font-weight:700">⚠️ 이날 민장님 일정 있음</span>';
+    schedsEl.style.display='block';
+    schedsEl.innerHTML=dayScheds.map(s=>
+      '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f5f5f0">'
+      +'<div style="width:4px;height:28px;border-radius:4px;background:'+s.color+';flex-shrink:0"></div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#111">'+s.title+'</div></div>'
+      +'<div style="font-size:11px;color:#888">'+s.start+(s.end?'~'+s.end:'')+'</div>'
+      +'</div>'
+    ).join('');
   } else {
     selLabel.innerHTML='<span style="color:#1a9e60;font-weight:600">✅ '+label+' 선택됨</span>';
+    schedsEl.style.display='none';
   }
   renderStaffCal();
 }
+
 
 async function submitStaffRequest(){
   const name=document.getElementById('staff-name-input').value.trim();
