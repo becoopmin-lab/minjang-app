@@ -467,7 +467,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
         </div>
       </div>
 
-      <button onclick="submitStaffRequest()" style="width:100%;height:52px;background:#1a9e60;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit">📨 요청 보내기</button>
+      <button id="staff-submit-btn" onclick="submitStaffRequest()" style="width:100%;height:52px;background:#1a9e60;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit">📨 요청 보내기</button>
     </div>
   </div>
 </div>
@@ -507,6 +507,25 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
         </div>
       </div>
       <div class="card"><div class="sec">알림 예약</div><div id="alarm-list"></div></div>
+
+      <!-- 빠른 메뉴 -->
+      <div class="card" style="padding:12px">
+        <div class="sec" style="margin-bottom:10px">바로가기</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <button onclick="sw('todo',document.querySelector('.nav-btn[data-tab=todo]'))" style="height:60px;border-radius:14px;border:1.5px solid #e8e8e4;background:#f8f8f4;font-size:20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:inherit">
+            <span>✅</span><span style="font-size:11px;font-weight:700;color:#555">할 일</span>
+          </button>
+          <button onclick="sw('cal',document.querySelector('.nav-btn[data-tab=cal]'))" style="height:60px;border-radius:14px;border:1.5px solid #e8e8e4;background:#f8f8f4;font-size:20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:inherit">
+            <span>📅</span><span style="font-size:11px;font-weight:700;color:#555">캘린더</span>
+          </button>
+          <button onclick="sw('expense',document.querySelector('.nav-btn[data-tab=expense]'))" style="height:60px;border-radius:14px;border:1.5px solid #e8e8e4;background:#f8f8f4;font-size:20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:inherit">
+            <span>💳</span><span style="font-size:11px;font-weight:700;color:#555">지출</span>
+          </button>
+          <button onclick="sw('stats',document.querySelector('.nav-btn[data-tab=stats]'))" style="height:60px;border-radius:14px;border:1.5px solid #e8e8e4;background:#f8f8f4;font-size:20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:inherit">
+            <span>📊</span><span style="font-size:11px;font-weight:700;color:#555">통계</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- ── 할 일 ── -->
@@ -674,7 +693,18 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
             <button class="abtn" onclick="addFixedExp()">+ 저장</button>
           </div>
         </div>
-        <div class="card"><div class="sec">고정 지출 목록</div><div id="fe-list"></div></div>
+        <div class="card">
+  <div class="sec" style="margin-bottom:10px">고정 지출 목록</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="fe-store-tabs">
+    <button class="tvsw on" onclick="setFeStore('all',this)">전체</button>
+    <button class="tvsw" onclick="setFeStore('비쿱',this)">비쿱</button>
+    <button class="tvsw" onclick="setFeStore('제니스',this)">제니스</button>
+    <button class="tvsw" onclick="setFeStore('중산',this)">중산</button>
+    <button class="tvsw" onclick="setFeStore('마샬',this)">마샬</button>
+    <button class="tvsw" onclick="setFeStore('개인',this)">개인</button>
+  </div>
+  <div id="fe-list"></div>
+</div>
         <div class="card" id="fe-alert-card">
           <div class="sec">⏰ 7일 이내 납부 예정</div>
           <div id="fe-alerts"></div>
@@ -836,19 +866,19 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
   </div>
 
   <div class="nav">
-    <button class="nb on" onclick="sw('routine',this)">
+    <button class="nb on" onclick="sw('routine',this)" data-tab="routine" class="nav-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg><span>루틴</span>
     </button>
-    <button class="nb" onclick="sw('todo',this)">
+    <button class="nb" onclick="sw('todo',this)" data-tab="todo" class="nav-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>할 일</span>
     </button>
-    <button class="nb" onclick="sw('expense',this)">
+    <button class="nb" onclick="sw('expense',this)" data-tab="expense" class="nav-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>지출</span>
     </button>
-    <button class="nb" onclick="sw('cal',this)">
+    <button class="nb" onclick="sw('cal',this)" data-tab="cal" class="nav-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>캘린더</span>
     </button>
-    <button class="nb" onclick="sw('stats',this)">
+    <button class="nb" onclick="sw('stats',this)" data-tab="stats" class="nav-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>통계</span>
     </button>
   </div>
@@ -1313,7 +1343,7 @@ function renderTodos(){
   });
   
   const dateLabel=(d)=>{
-    if(d==='날짜없음')return '📋 날짜 미정';
+    if(d==='날짜없음')return '날짜 미정';
     const dt=new Date(d+'T00:00:00');
     const month=dt.getMonth()+1;
     const day=dt.getDate();
@@ -1344,10 +1374,10 @@ function renderTodos(){
     let dateBadge='',timeBadge='';
     if(t.dueDate){
       const isOverdue=!t.done&&t.dueDate<nowStr;
-      dateBadge=`<span class="t-date-badge ${isOverdue?'t-overdue':''}">📅 ${t.dueDate.slice(5).replace('-','/')}</span>`;
+      dateBadge='';
     }
     if(t.dueTime){
-      timeBadge=`<span class="t-time-badge">🕐 ${t.dueTime}</span>`;
+      timeBadge=`<span class="t-time-badge" style="font-size:15px;font-weight:800;color:#111;background:none;padding:0">${t.dueTime}</span>`;
     }
     const metaRow=(dateBadge||timeBadge)?`<div class="t-meta">${dateBadge}${timeBadge}</div>`:'';
     const subItems=t.subs.map(s=>`<div class="sub-item"><div class="sub-ck ${s.done?'y':''}" onclick="togSub(${t.id},${s.id})"></div><span class="sub-text ${s.done?'done':''}">${s.text}</span><button class="sub-del" onclick="delSub(${t.id},${s.id})">✕</button></div>`).join('');
@@ -1738,6 +1768,13 @@ function delE(id){exps=exps.filter(e=>e.id!==id);saveExps();renderExps();}
 document.getElementById('e-amt').addEventListener('keypress',e=>{if(e.key==='Enter')addExp();});
 
 /* ── FIXED EXPENSES ── */
+let currentFeStore='all';
+function setFeStore(store,btn){
+  currentFeStore=store;
+  document.querySelectorAll('#fe-store-tabs .tvsw').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderFixedExps();
+}
 function renderFixedExps(){
   // Alert card: items due within 7 days
   const today2=new Date(),todayDay=today2.getDate();
@@ -2567,6 +2604,8 @@ function setStaffView(period, btn){
 }
 
 let isPrivateRequest=false;
+const staffDoneScheds=new Set();
+function toggleStaffDone(key){if(staffDoneScheds.has(key))staffDoneScheds.delete(key);else staffDoneScheds.add(key);document.getElementById('staff-sched-filtered').querySelectorAll('[onclick]').forEach(()=>{});const curBtn=document.querySelector('#sv-day.on,#sv-week.on,#sv-month.on,#sv-year.on');if(curBtn)curBtn.click();}
 
 function togglePrivate(){
   isPrivateRequest=!isPrivateRequest;
@@ -2582,15 +2621,15 @@ async function submitStaffRequest(){
   const date=document.getElementById('staff-date').value;
   const time=document.getElementById('staff-time').value;
   const memo=document.getElementById('staff-memo').value.trim();
-  if(!name){alert('이름을 입력해주세요!');return;}
+  // 이름 없으면 '익명'으로
   if(!title){alert('요청 제목을 입력해주세요!');return;}
   if(!date){alert('날짜를 선택해주세요!');return;}
   
-  const btn=document.querySelector('#staff-view button[onclick="submitStaffRequest()"]');
+  const btn=document.getElementById('staff-submit-btn');
   btn.textContent='전송 중...';btn.disabled=true;
   try{
     const reqData={fields:{
-      name:{stringValue:name},title:{stringValue:title},
+      name:{stringValue:name||'익명'},title:{stringValue:title},
       date:{stringValue:date},time:{stringValue:time||''},
       memo:{stringValue:isPrivateRequest?'🔒 비공개':memo},status:{stringValue:'pending'},isPrivate:{booleanValue:isPrivateRequest},
       createdAt:{integerValue:String(Date.now())}
