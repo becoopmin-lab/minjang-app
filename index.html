@@ -1310,11 +1310,16 @@ function renderTodos(){
   const el=document.getElementById('t-list');
   let list=activeTodos();
   if(todoFilter!=='all')list=list.filter(t=>t.category===todoFilter);
-  // 시간순 정렬 (날짜+시간 기준)
+  // 오늘 최우선, 그 다음 날짜+시간순
+  const _today=todayStr();
   list.sort((a,b)=>{
-    const da=(a.dueDate||'9999-99-99')+(a.dueTime||'99:99');
-    const db=(b.dueDate||'9999-99-99')+(b.dueTime||'99:99');
-    return da.localeCompare(db);
+    const da=(a.dueDate||'9999-99-99');
+    const db=(b.dueDate||'9999-99-99');
+    // 오늘 항목 최상단
+    if(da===_today && db!==_today) return -1;
+    if(db===_today && da!==_today) return 1;
+    // 나머지는 날짜+시간순
+    return (da+(a.dueTime||'99:99')).localeCompare(db+(b.dueTime||'99:99'));
   });
   if(!list.length){el.innerHTML='<p class="empty">할 일을 추가해보세요!</p>';renderCalTodos();updateBadge('todo');return;}
 
@@ -2808,3 +2813,4 @@ setInterval(()=>{if(document.getElementById('admin-app')&&document.getElementByI
 </script>
 </body>
 </html>
+ 
