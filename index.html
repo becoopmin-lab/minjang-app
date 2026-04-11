@@ -497,6 +497,35 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 
   </div>
 </div>
+
+<!-- 민장 PIN 입력 -->
+<div class="pin-overlay" id="pin-overlay" style="display:none">
+  <div class="pin-box">
+    <div class="pin-title">🔐 민장님 입장</div>
+    <div class="pin-sub">비밀번호를 입력해주세요</div>
+    <input type="password" id="pin-input-field" maxlength="10" placeholder="비밀번호"
+      style="width:100%;height:50px;border:2px solid #e8e8e4;border-radius:14px;padding:0 16px;font-size:20px;text-align:center;letter-spacing:6px;font-family:inherit;outline:none;background:#f8f8f4;margin:16px 0"
+      onkeypress="if(event.key==='Enter')checkPin()">
+    <button onclick="checkPin()" style="width:100%;height:50px;background:#1a9e60;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit">확인</button>
+    <button onclick="pinCancel()" style="width:100%;height:40px;background:none;border:none;color:#aaa;font-size:14px;cursor:pointer;font-family:inherit;margin-top:8px">취소</button>
+    <div style="color:#ff4d6d;font-size:12px;text-align:center;margin-top:6px" id="pin-error"></div>
+  </div>
+</div>
+
+<!-- 직원 PIN 입력 -->
+<div class="pin-overlay" id="staff-pin-overlay" style="display:none">
+  <div class="pin-box">
+    <div class="pin-title" id="staff-pin-name">이름</div>
+    <div class="pin-sub">생일 뒤 4자리를 입력해주세요</div>
+    <input type="password" id="staff-pin-input" maxlength="4" placeholder="0000"
+      style="width:100%;height:50px;border:2px solid #e8e8e4;border-radius:14px;padding:0 16px;font-size:24px;text-align:center;letter-spacing:8px;font-family:inherit;outline:none;background:#f8f8f4;margin:12px 0"
+      onkeypress="if(event.key==='Enter')checkStaffPin()">
+    <button onclick="checkStaffPin()" style="width:100%;height:50px;background:#1a9e60;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit">확인</button>
+    <button onclick="document.getElementById('staff-pin-overlay').style.display='none'" style="width:100%;height:40px;background:none;border:none;color:#aaa;font-size:14px;cursor:pointer;font-family:inherit;margin-top:8px">취소</button>
+    <div style="color:#ff4d6d;font-size:12px;text-align:center;margin-top:6px" id="staff-pin-error"></div>
+  </div>
+</div>
+
 <!-- 직원용 화면 -->
 <div class="staff-view" id="staff-view">
   <div class="hdr">
