@@ -517,6 +517,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
   <div class="pin-box">
     <div class="pin-title" id="staff-pin-name">이름</div>
     <div class="pin-sub">생일 뒤 4자리를 입력해주세요</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:4px" id="staff-pin-hint"></div>
     <input type="password" id="staff-pin-input" maxlength="4" placeholder="0000"
       style="width:100%;height:50px;border:2px solid #e8e8e4;border-radius:14px;padding:0 16px;font-size:24px;text-align:center;letter-spacing:8px;font-family:inherit;outline:none;background:#f8f8f4;margin:12px 0"
       onkeypress="if(event.key==='Enter')checkStaffPin()">
@@ -2749,15 +2750,15 @@ function enterStaffAs(name, store){
   const hdrDate = document.getElementById('hdr-date');
   const nn = new Date();
   if(hdrDate) hdrDate.textContent = name + ' · ' + store + ' · ' + (nn.getMonth()+1)+'월'+nn.getDate()+'일';
-  // 데이터 로드 (개인 데이터)
-  allTodos=LS(K.todos,[]);
-  exps=LS(K.exps,[]);
-  schedules=LS(K.scheds,[]);
-  streak=LS(K.streak,0);
-  rState=LS(K.routine(todayStr()),{});
-  renderTodos();renderExps();renderRoutine();renderChecklist();
+  // 데이터 초기화 (각 유저별 빈 데이터로 시작, Firebase에서 불러옴)
+  allTodos=[];
+  exps=[];
+  schedules=[];
+  streak=0;
+  rState={};
+  renderTodos();renderExps();renderRoutine();
+  if(document.getElementById('cl-list'))renderChecklist();
   initCloud();
-  // 공유 캘린더 로드
   loadSharedCalendar();
 }
 
@@ -3082,7 +3083,7 @@ let checkItems=LS('mj_checklist',[]);
 
 function renderChecklist(){
   const el=document.getElementById('cl-list');
-  if(!el)return;
+  if(!el){console.log('cl-list not found');return;}
   const cnt=document.getElementById('cl-count');
   if(!el)return;
   const done=checkItems.filter(x=>x.done).length;
@@ -3209,7 +3210,7 @@ function enterStaffWithPin(name, store, birthday){
   const pin = birthday.replace(/[^0-9]/g,'').slice(0,4);
   staffPinTarget = {name, store, pin};
   document.getElementById('staff-pin-name').textContent = name + ' 님';
-  document.getElementById('staff-pin-hint').textContent = '(생일: '+birthday+')';
+  const hintEl=document.getElementById('staff-pin-hint'); if(hintEl) hintEl.textContent='(생일: '+birthday+')';
   document.getElementById('staff-pin-input').value = '';
   document.getElementById('staff-pin-error').textContent = '';
   document.getElementById('staff-pin-overlay').style.display = 'flex';
