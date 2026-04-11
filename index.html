@@ -335,16 +335,57 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 <!-- 랜딩 화면 -->
 <div class="landing-bg" id="landing-screen">
   <div class="landing-logo">✂️</div>
-  <div class="landing-title">브래뉴</div>
-  <div class="landing-sub">무엇을 하시겠어요?</div>
-  <button class="landing-btn landing-btn-main" onclick="enterAdmin()">
+  <div class="landing-title">BRANU</div>
+  <div class="landing-sub">누구신가요?</div>
+
+  <!-- 민장님 -->
+  <button class="landing-btn landing-btn-main" onclick="enterAdmin()" style="margin-bottom:10px">
     <span class="landing-btn-icon">👑</span>
-    <div style="text-align:left"><div>민장님 입장</div><div style="font-size:11px;font-weight:500;opacity:.8">전체 관리 화면</div></div>
+    <div style="text-align:left"><div>민 장</div><div style="font-size:11px;font-weight:500;opacity:.8">관리자 전용</div></div>
   </button>
-  <button class="landing-btn landing-btn-staff" onclick="enterStaff()">
-    <span class="landing-btn-icon">📨</span>
-    <div style="text-align:left"><div>업무 요청</div><div style="font-size:11px;font-weight:500;color:#888">스케줄 확인 + 요청</div></div>
-  </button>
+
+  <!-- 디자이너 / 파트너 토글 -->
+  <div style="width:100%;max-width:320px;margin-bottom:10px">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="toggleGroup('designer')" id="grp-designer"
+        style="flex:1;height:50px;border-radius:14px;border:2px solid #e8e8e4;background:#fff;font-size:15px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .15s">
+        ✂️ 디자이너
+      </button>
+      <button onclick="toggleGroup('partner')" id="grp-partner"
+        style="flex:1;height:50px;border-radius:14px;border:2px solid #e8e8e4;background:#fff;font-size:15px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .15s">
+        🤝 파트너
+      </button>
+    </div>
+
+    <!-- 디자이너 이름 목록 -->
+    <div id="list-designer" style="display:none;background:#fff;border-radius:14px;border:1.5px solid #e8e8e4;overflow:hidden;margin-bottom:6px">
+      <div style="padding:8px 14px;font-size:11px;font-weight:700;color:#1a9e60;background:rgba(26,158,96,.06)">✂️ 제니스점</div>
+      <button onclick="enterStaffAs('오팀장','제니스')" class="name-entry-btn">오팀장</button>
+      <button onclick="enterStaffAs('채원','제니스')" class="name-entry-btn">채원</button>
+      <button onclick="enterStaffAs('현호','제니스')" class="name-entry-btn">현호</button>
+      <button onclick="enterStaffAs('수현','제니스')" class="name-entry-btn">수현</button>
+      <div style="padding:8px 14px;font-size:11px;font-weight:700;color:#e07020;background:rgba(224,112,32,.06);border-top:1px solid #f0f0f0">✂️ 중산점</div>
+      <button onclick="enterStaffAs('강호','중산')" class="name-entry-btn">강호</button>
+      <button onclick="enterStaffAs('예진','중산')" class="name-entry-btn">예진</button>
+      <button onclick="enterStaffAs('지수','중산')" class="name-entry-btn">지수</button>
+      <div style="padding:8px 14px;font-size:11px;font-weight:700;color:#ff4d6d;background:rgba(255,77,109,.06);border-top:1px solid #f0f0f0">✂️ 마샬점</div>
+      <button onclick="enterStaffAs('찬혁','마샬')" class="name-entry-btn">찬혁</button>
+      <button onclick="enterStaffAs('지현','마샬')" class="name-entry-btn">지현</button>
+      <button onclick="enterStaffAs('유나','마샬')" class="name-entry-btn">유나</button>
+    </div>
+
+    <!-- 파트너 이름 목록 -->
+    <div id="list-partner" style="display:none;background:#fff;border-radius:14px;border:1.5px solid #e8e8e4;overflow:hidden;margin-bottom:6px">
+      <div style="padding:8px 14px;font-size:11px;font-weight:700;color:#a769ff;background:rgba(167,105,255,.06)">🤝 비쿱 파트너</div>
+      <button onclick="enterStaffAs('강호파트너','비쿱')" class="name-entry-btn">강호</button>
+      <button onclick="enterStaffAs('채원파트너','비쿱')" class="name-entry-btn">채원</button>
+      <div style="padding:8px 14px;font-size:11px;font-weight:700;color:#888;background:rgba(0,0,0,.03);border-top:1px solid #f0f0f0">🤝 제니스 파트너</div>
+      <button onclick="enterStaffAs('제니스파트너1','제니스')" class="name-entry-btn">파트너1</button>
+      <button onclick="enterStaffAs('제니스파트너2','제니스')" class="name-entry-btn">파트너2</button>
+      <div style="padding:8px 14px;font-size:11px;font-weight:700;color:#888;background:rgba(0,0,0,.03);border-top:1px solid #f0f0f0">🤝 중산 파트너</div>
+      <button onclick="enterStaffAs('중산파트너1','중산')" class="name-entry-btn">파트너1</button>
+    </div>
+  </div>
 </div>
 
 
@@ -450,6 +491,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
   <div class="hdr">
     <div><h1 id="hdr-title">모닝 루틴</h1><div class="sub" id="hdr-date"></div></div>
     <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="logoutAdmin()" style="background:#f0f0eb;border:1px solid #e8e8e4;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;color:#888;cursor:pointer;font-family:inherit;margin-right:4px">로그아웃</button>
       <button onclick="manualSync()" id="sync-btn" style="background:rgba(26,158,96,.12);border:1px solid rgba(26,158,96,.3);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:#1a9e60;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px">
         ☁️ <span id="sync-btn-text">동기화</span>
       </button>
@@ -2409,6 +2451,7 @@ function checkPin(){
     document.getElementById('pin-overlay').style.display='none';
     document.getElementById('pin-input-field').value='';
     document.getElementById('pin-error').textContent='';
+    localStorage.setItem('mj_auto_login','admin');
     enterAdminConfirmed();
   } else {
     document.getElementById('pin-error').textContent='❌ 비밀번호가 틀렸어요';
@@ -2476,6 +2519,10 @@ function checkAdminPass(){
   }
 }
 
+function logoutAdmin(){
+  localStorage.removeItem('mj_auto_login');
+  location.reload();
+}
 function enterAdmin(){
   document.getElementById('pin-overlay').style.display='flex';
   document.getElementById('pin-input-field').value='';
@@ -2484,6 +2531,8 @@ function enterAdmin(){
 }
 
 function enterAdminConfirmed(){
+  // 자동 로그인 저장
+  localStorage.setItem('mj_auto_login','admin');
   document.getElementById('landing-screen').style.display='none';
   document.getElementById('staff-view').style.display='none';
   document.getElementById('admin-app').style.display='flex';
@@ -2494,14 +2543,39 @@ function enterAdminConfirmed(){
   },100);
 }
 
-function enterStaff(){
+function toggleGroup(grp){
+  const d=document.getElementById('list-'+grp);
+  const btn=document.getElementById('grp-'+grp);
+  const other=grp==='designer'?'partner':'designer';
+  document.getElementById('list-'+other).style.display='none';
+  document.getElementById('grp-'+other).style.background='#fff';
+  document.getElementById('grp-'+other).style.borderColor='#e8e8e4';
+  document.getElementById('grp-'+other).style.color='#555';
+  const isOpen=d.style.display!=='none';
+  d.style.display=isOpen?'none':'block';
+  btn.style.background=isOpen?'#fff':'rgba(26,158,96,.08)';
+  btn.style.borderColor=isOpen?'#e8e8e4':'#1a9e60';
+  btn.style.color=isOpen?'#555':'#1a9e60';
+}
+
+function enterStaffAs(name, store){
+  localStorage.setItem('mj_staff_name', name);
+  localStorage.setItem('mj_staff_store', store);
+  enterStaff(name);
+}
+
+function enterStaff(nameOverride){
   document.getElementById('landing-screen').style.display='none';
   document.getElementById('staff-view').style.display='block';
   document.getElementById('admin-app').style.display='none';
   staffCalYear=new Date().getFullYear();
   staffCalMonth=new Date().getMonth();
   staffSelectedDate='';
-  document.getElementById('staff-hdr-date').textContent=new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
+  const sName=nameOverride||localStorage.getItem('mj_staff_name')||'';
+  const sStore=localStorage.getItem('mj_staff_store')||'';
+  document.getElementById('staff-hdr-date').textContent=(sName?sName+' · ':'')+new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
+  // Pre-fill name in request form
+  if(sName) document.getElementById('staff-name-input').value=sName;
   initStaffCal();
 }
 
@@ -2833,18 +2907,57 @@ function addCheckItem(){
   SS('mj_checklist',checkItems);
   inp.value='';
   renderChecklist();
+
+// 자동 로그인 체크
+(function(){
+  const saved = localStorage.getItem('mj_auto_login');
+  if(saved==='admin'){
+    // 자동 민장님 입장
+    document.getElementById('landing-screen').style.display='none';
+    document.getElementById('admin-app').style.display='flex';
+    renderTodos();renderExps();renderRoutine();renderChecklist();
+    initCloud();
+    setTimeout(loadStaffRequests,2000);
+  }
+})();
 }
 
 function toggleCheck(i){
   checkItems[i].done=!checkItems[i].done;
   SS('mj_checklist',checkItems);
   renderChecklist();
+
+// 자동 로그인 체크
+(function(){
+  const saved = localStorage.getItem('mj_auto_login');
+  if(saved==='admin'){
+    // 자동 민장님 입장
+    document.getElementById('landing-screen').style.display='none';
+    document.getElementById('admin-app').style.display='flex';
+    renderTodos();renderExps();renderRoutine();renderChecklist();
+    initCloud();
+    setTimeout(loadStaffRequests,2000);
+  }
+})();
 }
 
 function deleteCheck(i){
   checkItems.splice(i,1);
   SS('mj_checklist',checkItems);
   renderChecklist();
+
+// 자동 로그인 체크
+(function(){
+  const saved = localStorage.getItem('mj_auto_login');
+  if(saved==='admin'){
+    // 자동 민장님 입장
+    document.getElementById('landing-screen').style.display='none';
+    document.getElementById('admin-app').style.display='flex';
+    renderTodos();renderExps();renderRoutine();renderChecklist();
+    initCloud();
+    setTimeout(loadStaffRequests,2000);
+  }
+})();
 }
 
 /* ══ BOOT ══ */
