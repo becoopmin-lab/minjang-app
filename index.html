@@ -754,10 +754,12 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
             <button class="cal-view-tab" id="cvt-year" onclick="setCalViewTab('year',this)">년별</button>
           </div>
         </div>
+        <!-- 일정 추가 플로팅 버튼 -->
+        <button onclick="openModal()" style="position:fixed;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:#1a9e60;color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(26,158,96,.4);z-index:50;display:none" id="cal-fab">+</button>
         <div class="card">
           <div class="day-panel-hdr">
             <span class="day-panel-title" id="day-title"></span>
-            <button class="mini-abtn" onclick="openModal()">+ 일정</button>
+            <button onclick="openModal()" style="height:34px;padding:0 14px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 일정 추가</button>
           </div>
           <div id="day-scheds"></div>
         </div>
@@ -784,7 +786,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
         <div class="card">
           <div class="day-panel-hdr">
             <span class="day-panel-title" id="week-day-title"></span>
-            <button class="mini-abtn" onclick="openModal()">+ 일정</button>
+            <button onclick="openModal()" style="height:34px;padding:0 14px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 일정 추가</button>
           </div>
           <div id="week-day-scheds"></div>
         </div>
@@ -1255,6 +1257,9 @@ document.getElementById('alarm-list').innerHTML=['오전 6시 — 모닝 루틴 
 
 /* ══ NAV ══ */
 function sw(name,btn){
+  // Show/hide calendar FAB
+  const fab=document.getElementById('cal-fab');
+  if(fab) fab.style.display=name==='cal'?'flex':'none';
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('tab-'+name).classList.add('on');btn.classList.add('on');
@@ -1326,15 +1331,26 @@ function renderTodos(){
   const nowStr=todayStr();
   // 날짜별 그룹핑
   const groups={};
+  const overdueItems=[]; // 어제 이전 미완료
   list.forEach(t=>{
     const d=t.dueDate||'날짜없음';
+    // 과거 날짜 미완료 → overdue로 분리
+    if(d!=='날짜없음' && d<nowStr && !t.done){
+      overdueItems.push(t);
+      return;
+    }
     if(!groups[d])groups[d]=[];
     groups[d].push(t);
   });
+  // 오늘 그룹에 overdue 추가 (구분자로 표시)
+  if(overdueItems.length){
+    if(!groups[nowStr])groups[nowStr]=[];
+    // overdue items at bottom of today
+    groups[nowStr].__overdue=overdueItems;
+  }
   const sortedDates=Object.keys(groups).sort((a,b)=>{
     if(a==='날짜없음')return 1;
     if(b==='날짜없음')return -1;
-    // 오늘 최우선
     if(a===nowStr)return -1;
     if(b===nowStr)return 1;
     return a.localeCompare(b);
@@ -1366,6 +1382,28 @@ function renderTodos(){
     const hBorder=isToday?'#1a9e60':'#eee';
     const cntColor=isToday?'#1a9e60':'#aaa';
     html+='<div style="margin-bottom:4px"><div style="font-size:12px;font-weight:800;color:'+hColor+';padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid '+hBorder+';margin-bottom:6px"><span>'+dateLabel(date)+'</span><span style="font-size:11px;font-weight:600;color:'+cntColor+'">'+items.filter(t=>t.done).length+'/'+items.length+' 완료</span></div>';
+    // Render overdue items under today
+    if(date===nowStr && items.__overdue && items.__overdue.length){
+      html+='<div style="font-size:11px;font-weight:700;color:#ff4d6d;padding:8px 4px 4px;margin-top:4px;border-top:1px dashed #ffd0d0">⚠️ 미완료 ('+items.__overdue.length+'건)</div>';
+      html+=items.__overdue.map(t=>{
+      const sd=t.subs.filter(s=>s.done).length,st=t.subs.length,isOpen=openTodoId===t.id;
+      let dateBadge='',timeBadge='';
+      if(t.dueTime) timeBadge='<span class="t-time-badge" style="font-size:15px;font-weight:800;color:#ff4d6d;background:none;padding:0">'+t.dueTime+'</span>';
+      const metaRow=timeBadge?'<div class="t-meta">'+timeBadge+'</div>':'';      const subItems=t.subs.map(s=>'<div class="sub-item"><div class="sub-ck '+( s.done?'y':'')+'" onclick="togSub('+t.id+','+s.id+')"></div><span class="sub-text '+( s.done?'done':'')+'">'+s.text+'</span><button class="sub-del" onclick="delSub('+t.id+','+s.id+')">✕</button></div>').join('');
+      return '<div class="ti-wrap" style="opacity:.85;border-left:3px solid #ff4d6d;padding-left:6px;margin-left:-6px">'+
+        '<div class="ti">'+
+        '<div class="ck '+( t.done?'y':'')+'" onclick="togT('+t.id+')"></div>'+
+        '<div class="t-main" onclick="toggleDetail('+t.id+')">'+
+        '<div class="ttext '+( t.done?'done':'')+'">'+t.text+'</div>'+
+        metaRow+
+        '</div>'+
+        '<button class="expand-btn" onclick="toggleDetail('+t.id+')">✏️</button>'+
+        '<button class="dbtn" onclick="archiveTodo('+t.id+')" title="숨기기">🗑️</button>'+
+        '</div>'+
+        (isOpen?'<div class="t-detail open"><div class="detail-sec">제목</div><input type="text" value="'+escHtml(t.text)+'" onchange="updateTodoTitle('+t.id+',this.value)" style="width:100%;height:40px;border:1px solid #ddd;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:#111;outline:none;margin-bottom:10px;font-weight:600"><button onclick="editTodoModal('+t.id+')" style="width:100%;height:36px;border:1px solid rgba(255,77,109,.4);border-radius:9px;background:rgba(255,77,109,.06);color:#ff4d6d;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">✏️ 수정</button><button onclick="confirmDelete('+t.id+')" style="width:100%;height:36px;border:1px solid rgba(255,77,109,.4);border-radius:9px;background:rgba(255,77,109,.06);color:#ff4d6d;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🗑️ 완전 삭제</button></div>':'')+
+        '</div>';
+      }).join('');
+    }
     html+=items.map(t=>{
     const sd=t.subs.filter(s=>s.done).length,st=t.subs.length,isOpen=openTodoId===t.id;
     // Date/time display
@@ -1442,10 +1480,11 @@ let selectedPriority = 'mid';
 
 function selectPri(p){
   selectedPriority=p;
+  const map={urgent:'sel-high',store:'sel-mid',personal:'sel-low'};
   ['urgent','store','personal'].forEach(k=>{
     const btn=document.getElementById('pb-'+k);
     if(!btn)return;
-    btn.className='pri-btn '+(k===p?'sel-'+k:'unsel');
+    btn.className='pri-btn '+(k===p?map[k]:'unsel');
   });
 }
 
@@ -1461,7 +1500,7 @@ function openTodoModal(){
   document.getElementById('tm-date').value=todayStr();
   document.getElementById('tm-time').value='';
   document.getElementById('tm-note').value='';
-  selectPri('mid');
+  selectPri('store');
   document.getElementById('todo-modal-bg').classList.remove('hidden');
   setTimeout(()=>document.getElementById('tm-text').focus(),100);
 }
@@ -2816,3 +2855,4 @@ setInterval(()=>{if(document.getElementById('admin-app')&&document.getElementByI
 </script>
 </body>
 </html>
+ 
