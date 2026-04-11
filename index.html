@@ -990,6 +990,28 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
       </div>
     </div>
 
+    <!-- ── 팀 (어드민 전용) ── -->
+    <div class="tab" id="tab-team">
+      <div class="card">
+        <div class="sec" style="margin-bottom:12px">👥 팀원 현황</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="team-store-tabs">
+          <button class="tvsw on" onclick="setTeamStore('all',this)">전체</button>
+          <button class="tvsw" onclick="setTeamStore('제니스',this)">제니스</button>
+          <button class="tvsw" onclick="setTeamStore('마샬',this)">마샬</button>
+          <button class="tvsw" onclick="setTeamStore('중산',this)">중산</button>
+        </div>
+        <div id="team-list"><div class="empty">팀원 데이터를 불러오는 중...</div></div>
+      </div>
+      <!-- 공유 캘린더 -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="sec" style="margin-bottom:0">📅 공유 캘린더</div>
+          <button onclick="openSharedSchedModal()" style="height:32px;padding:0 12px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ 일정</button>
+        </div>
+        <div id="shared-cal-list"><div class="empty">공유 일정이 없어요</div></div>
+      </div>
+    </div>
+
   </div>
 
   <div class="nav">
@@ -1007,6 +1029,9 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
     </button>
     <button class="nb" onclick="sw('stats',this)" data-tab="stats" class="nav-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>통계</span>
+    </button>
+    <button class="nb" id="nav-team" onclick="sw('team',this)" data-tab="team" class="nav-btn" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>팀</span>
     </button>
   </div>
 </div>
@@ -1117,6 +1142,32 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
       <input type="number" id="ee-amt" placeholder="금액 (원)">
     </div>
     <button class="tm-save-btn" onclick="saveExpEdit()">💾 저장하기</button>
+  </div>
+</div>
+
+<!-- 공유 캘린더 추가 모달 -->
+<div class="todo-modal-bg hidden" id="shared-modal-bg" onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="todo-modal">
+    <div class="todo-modal-title">
+      <span>📅 공유 일정 추가</span>
+      <button class="todo-modal-close" onclick="document.getElementById('shared-modal-bg').classList.add('hidden')">✕</button>
+    </div>
+    <div class="tm-label">제목</div>
+    <div class="tm-row"><input type="text" id="sc-title" placeholder="일정 제목"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div style="flex:1"><div class="tm-label">날짜</div><div class="tm-row"><input type="date" id="sc-date"></div></div>
+      <div style="flex:1"><div class="tm-label">시간</div><div class="tm-row"><input type="time" id="sc-time"></div></div>
+    </div>
+    <div class="tm-label">매장</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap" id="sc-store-chips">
+      <button class="cat-chip sel" onclick="setSCStore('전체',this)">전체</button>
+      <button class="cat-chip" onclick="setSCStore('제니스',this)">제니스</button>
+      <button class="cat-chip" onclick="setSCStore('마샬',this)">마샬</button>
+      <button class="cat-chip" onclick="setSCStore('중산',this)">중산</button>
+    </div>
+    <div class="tm-label">내용</div>
+    <div class="tm-row"><textarea id="sc-memo" placeholder="일정 내용" style="height:60px"></textarea></div>
+    <button class="tm-save-btn" onclick="saveSharedSched()">📅 공유하기</button>
   </div>
 </div>
 
@@ -2202,9 +2253,19 @@ function saveSchedule(){
 
 /* ══ CLOUD SYNC (JSONBin.io) ══ */
 /* ══ FIREBASE REALTIME SYNC ══ */
-// Firebase 설정
-const FB_API = 'https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents/minjang_app/user_data';
 const FB_API_KEY = 'AIzaSyClE-7P_ENLUvsUTsUmJ_BH9Du01jvWn-4';
+const FB_BASE = 'https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents';
+let currentUser = 'minjang';  // 현재 로그인 유저
+let currentUserStore = '';
+let currentUserIsAdmin = false;
+// Firebase 경로 (유저별)
+function getUserFbApi(){ 
+  return FB_BASE + '/minjang_app/' + currentUser;
+}
+// 공유 캘린더 경로
+const SHARED_CAL_API = FB_BASE + '/minjang_app/shared_calendar';
+// 기존 호환성
+let FB_API = FB_BASE + '/minjang_app/minjang';
 
 let syncTimer=null;
 let cloudKey='firebase';
@@ -2248,7 +2309,7 @@ async function firebaseSave(manual=false){
         fixedExps:{stringValue:JSON.stringify(fixedExps)}
       }
     };
-    const res=await fetch(FB_API+'?key='+FB_API_KEY,{
+    const res=await fetch(getUserFbApi()+'?key='+FB_API_KEY,{
       method:'PATCH',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(data)
@@ -2267,7 +2328,7 @@ async function firebaseSave(manual=false){
 
 async function firebaseLoad(silent=false){
   try{
-    const res=await fetch(FB_API+'?key='+FB_API_KEY);
+    const res=await fetch(getUserFbApi()+'?key='+FB_API_KEY);
     if(!res.ok){if(!silent)alert('불러오기 실패');return;}
     const json=await res.json();
     const f=json.fields;
@@ -2628,8 +2689,10 @@ function enterAdmin(){
 }
 
 function enterAdminConfirmed(){
-  // 자동 로그인 저장
   localStorage.setItem('mj_auto_login','admin');
+  currentUser = 'minjang';
+  currentUserStore = '';
+  currentUserIsAdmin = true;
   document.getElementById('landing-screen').style.display='none';
   document.getElementById('staff-view').style.display='none';
   document.getElementById('admin-app').style.display='flex';
@@ -2644,7 +2707,29 @@ function enterAdminConfirmed(){
 function enterStaffAs(name, store){
   localStorage.setItem('mj_staff_name', name);
   localStorage.setItem('mj_staff_store', store);
-  enterStaff(name);
+  localStorage.setItem('mj_staff_login', JSON.stringify({name, store}));
+  currentUser = 'staff_' + name;
+  currentUserStore = store;
+  currentUserIsAdmin = false;
+  // 앱 전환
+  document.getElementById('landing-screen').style.display='none';
+  document.getElementById('staff-view').style.display='none';
+  document.getElementById('admin-app').style.display='flex';
+  // 헤더 업데이트
+  document.getElementById('hdr-title').textContent = '모닝 루틴';
+  const hdrDate = document.getElementById('hdr-date');
+  const nn = new Date();
+  if(hdrDate) hdrDate.textContent = name + ' · ' + store + ' · ' + (nn.getMonth()+1)+'월'+nn.getDate()+'일';
+  // 데이터 로드 (개인 데이터)
+  allTodos=LS(K.todos,[]);
+  exps=LS(K.exps,[]);
+  schedules=LS(K.scheds,[]);
+  streak=LS(K.streak,0);
+  rState=LS(K.routine(todayStr()),{});
+  renderTodos();renderExps();renderRoutine();renderChecklist();
+  initCloud();
+  // 공유 캘린더 로드
+  loadSharedCalendar();
 }
 
 function enterStaff(nameOverride){
@@ -2676,7 +2761,7 @@ let staffSchedules=[];
 
 async function initStaffCal(){
   try{
-    const res=await fetch(FB_API+'?key='+FB_API_KEY);
+    const res=await fetch(getUserFbApi()+'?key='+FB_API_KEY);
     if(res.ok){
       const json=await res.json();
       const f=json.fields;
