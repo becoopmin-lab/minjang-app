@@ -337,21 +337,10 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
   <div class="landing-logo">✂️</div>
   <div class="landing-title">브래뉴</div>
   <div class="landing-sub">무엇을 하시겠어요?</div>
-  <button class="landing-btn landing-btn-main" onclick="showAdminPass()">
+  <button class="landing-btn landing-btn-main" onclick="enterAdmin()">
     <span class="landing-btn-icon">👑</span>
     <div style="text-align:left"><div>민장님 입장</div><div style="font-size:11px;font-weight:500;opacity:.8">전체 관리 화면</div></div>
   </button>
-  <!-- 비밀번호 입력 -->
-  <div id="admin-pass-box" style="display:none;width:100%;max-width:320px;margin-bottom:14px;animation:fadeIn .2s">
-    <div style="font-size:13px;color:#666;margin-bottom:8px;text-align:center">🔒 비밀번호를 입력해주세요</div>
-    <div style="display:flex;gap:8px">
-      <input type="password" id="admin-pass-input" placeholder="비밀번호" maxlength="10"
-        style="flex:1;height:44px;border:1.5px solid #1a9e60;border-radius:12px;padding:0 14px;font-size:16px;font-family:inherit;outline:none;text-align:center;letter-spacing:4px"
-        onkeypress="if(event.key==='Enter')checkAdminPass()">
-      <button onclick="checkAdminPass()" style="height:44px;padding:0 16px;background:#1a9e60;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">확인</button>
-    </div>
-    <div id="admin-pass-err" style="display:none;color:#ff4d6d;font-size:12px;text-align:center;margin-top:6px">비밀번호가 틀렸어요!</div>
-  </div>
   <button class="landing-btn landing-btn-staff" onclick="enterStaff()">
     <span class="landing-btn-icon">📨</span>
     <div style="text-align:left"><div>업무 요청</div><div style="font-size:11px;font-weight:500;color:#888">스케줄 확인 + 요청</div></div>
@@ -363,27 +352,13 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 <div class="pin-overlay" id="pin-overlay" style="display:none">
   <div class="pin-box">
     <div class="pin-title">🔐 민장님 입장</div>
-    <div class="pin-sub">비밀번호 4자리를 입력해주세요</div>
-    <div class="pin-display" id="pin-display">
-      <span class="pin-dot" id="pd0"></span>
-      <span class="pin-dot" id="pd1"></span>
-      <span class="pin-dot" id="pd2"></span>
-      <span class="pin-dot" id="pd3"></span>
-    </div>
-    <div class="pin-grid">
-      <button class="pin-btn" onclick="pinInput('1')">1</button>
-      <button class="pin-btn" onclick="pinInput('2')">2</button>
-      <button class="pin-btn" onclick="pinInput('3')">3</button>
-      <button class="pin-btn" onclick="pinInput('4')">4</button>
-      <button class="pin-btn" onclick="pinInput('5')">5</button>
-      <button class="pin-btn" onclick="pinInput('6')">6</button>
-      <button class="pin-btn" onclick="pinInput('7')">7</button>
-      <button class="pin-btn" onclick="pinInput('8')">8</button>
-      <button class="pin-btn" onclick="pinInput('9')">9</button>
-      <button class="pin-btn" onclick="pinCancel()" style="font-size:13px;color:#888">취소</button>
-      <button class="pin-btn" onclick="pinInput('0')">0</button>
-      <button class="pin-btn del" onclick="pinDelete()">⌫</button>
-    </div>
+    <div class="pin-sub">비밀번호를 입력해주세요</div>
+    <input type="password" id="pin-input-field" maxlength="10"
+      placeholder="비밀번호"
+      style="width:100%;height:50px;border:2px solid #e8e8e4;border-radius:14px;padding:0 16px;font-size:20px;text-align:center;letter-spacing:6px;font-family:inherit;outline:none;background:#f8f8f4;margin:16px 0"
+      onkeypress="if(event.key==='Enter')checkPin()">
+    <button onclick="checkPin()" style="width:100%;height:50px;background:#1a9e60;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit">확인</button>
+    <button onclick="pinCancel()" style="width:100%;height:40px;background:none;border:none;color:#aaa;font-size:14px;cursor:pointer;font-family:inherit;margin-top:8px">취소</button>
     <div class="pin-error" id="pin-error"></div>
   </div>
 </div>
@@ -2381,6 +2356,20 @@ async function rejectRequest(docId){
 /* ══ PIN ══ */
 const ADMIN_PIN='3456';
 let pinValue='';
+function checkPin(){
+  const val=document.getElementById('pin-input-field').value;
+  if(val===ADMIN_PIN){
+    document.getElementById('pin-overlay').style.display='none';
+    document.getElementById('pin-input-field').value='';
+    document.getElementById('pin-error').textContent='';
+    enterAdminConfirmed();
+  } else {
+    document.getElementById('pin-error').textContent='❌ 비밀번호가 틀렸어요';
+    document.getElementById('pin-input-field').value='';
+    document.getElementById('pin-input-field').focus();
+    setTimeout(()=>document.getElementById('pin-error').textContent='',1500);
+  }
+}
 
 function pinInput(n){
   if(pinValue.length>=4)return;
@@ -2442,8 +2431,9 @@ function checkAdminPass(){
 
 function enterAdmin(){
   document.getElementById('pin-overlay').style.display='flex';
-  pinValue='';
-  updatePinDisplay();
+  document.getElementById('pin-input-field').value='';
+  document.getElementById('pin-error').textContent='';
+  setTimeout(()=>document.getElementById('pin-input-field').focus(),100);
 }
 
 function enterAdminConfirmed(){
@@ -2818,4 +2808,3 @@ setInterval(()=>{if(document.getElementById('admin-app')&&document.getElementByI
 </script>
 </body>
 </html>
- 
