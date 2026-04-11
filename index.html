@@ -2760,6 +2760,15 @@ function enterStaffAs(name, store){
   if(document.getElementById('cl-list'))renderChecklist();
   initCloud();
   loadSharedCalendar();
+  // 직원은 개인 지출만
+  const storeCard=document.querySelector('#tab-expense .card');
+  if(storeCard) storeCard.style.display='none';
+  currentStore='개인';
+  const stBtn=document.getElementById('st-개인');
+  if(stBtn){
+    document.querySelectorAll('.store-card-btn').forEach(b=>b.classList.remove('on'));
+    stBtn.classList.add('on');
+  }
 }
 
 function enterStaff(nameOverride){
