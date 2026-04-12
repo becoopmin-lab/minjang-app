@@ -1236,6 +1236,10 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 </div>
 
 <script>
+var currentUser="minjang";
+var currentUserStore="";
+var currentUserIsAdmin=false;
+
 /* ══ STORAGE ══ */
 const K={todos:'mj_v2_todos',exps:'mj_v2_exps',scheds:'mj_v2_scheds',streak:'mj_v2_streak',routine:d=>'mj_v2_r_'+d};
 function LS(key,def){try{const s=localStorage.getItem(key);return s?JSON.parse(s):def;}catch(e){return def;}}
@@ -2344,9 +2348,7 @@ function saveSchedule(){
 /* ══ FIREBASE REALTIME SYNC ══ */
 const FB_API_KEY = 'AIzaSyClE-7P_ENLUvsUTsUmJ_BH9Du01jvWn-4';
 const FB_BASE = 'https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents';
-let currentUser = 'minjang';  // 현재 로그인 유저
-let currentUserStore = '';
-let currentUserIsAdmin = false;
+// user vars moved to top
 // Firebase 경로 (유저별)
 function getUserFbApi(){ 
   return FB_BASE + '/minjang_app/' + currentUser;
@@ -2690,7 +2692,7 @@ var ADMIN_PIN='3456';
 let pinValue='';
 function checkPin(){
   const val=document.getElementById('pin-input-field').value;
-  if(val==='3456'){
+  if(val===(typeof ADMIN_PIN!=='undefined'?ADMIN_PIN:'3456')){
     document.getElementById('pin-overlay').style.display='none';
     document.getElementById('pin-input-field').value='';
     document.getElementById('pin-error').textContent='';
@@ -2752,7 +2754,7 @@ function showAdminPass(){
 
 function checkAdminPass(){
   const val=document.getElementById('admin-pass-input').value;
-  if(val==='3456'){
+  if(val===(typeof ADMIN_PIN!=='undefined'?ADMIN_PIN:'3456')){
     document.getElementById('admin-pass-box').style.display='none';
     enterAdmin();
   } else {
@@ -3541,4 +3543,3 @@ setInterval(()=>{if(document.getElementById('admin-app')&&document.getElementByI
 </script>
 </body>
 </html>
- 
