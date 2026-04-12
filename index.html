@@ -930,7 +930,10 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
         <div class="card">
           <div class="day-panel-hdr">
             <span class="day-panel-title" id="day-title"></span>
-            <button onclick="openModal()" style="height:34px;padding:0 14px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 일정 추가</button>
+            <div style="display:flex;gap:6px">
+              <button onclick="openShareSchedModal()" style="height:34px;padding:0 10px;background:rgba(26,158,96,.1);color:#1a9e60;border:1px solid rgba(26,158,96,.3);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📤 공유</button>
+              <button onclick="openModal()" style="height:34px;padding:0 14px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 추가</button>
+            </div>
           </div>
           <div id="day-scheds"></div>
         </div>
@@ -1207,6 +1210,25 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
   </div>
 </div>
 
+<!-- 일정 공유 모달 -->
+<div class="todo-modal-bg hidden" id="share-sched-modal-bg" onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="todo-modal">
+    <div class="todo-modal-title">
+      <span>📤 민장님께 일정 공유</span>
+      <button class="todo-modal-close" onclick="document.getElementById('share-sched-modal-bg').classList.add('hidden')">✕</button>
+    </div>
+    <div class="tm-label">제목</div>
+    <div class="tm-row"><input type="text" id="ss-title" placeholder="일정 제목"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div style="flex:1"><div class="tm-label">날짜</div><div class="tm-row"><input type="date" id="ss-date"></div></div>
+      <div style="flex:1"><div class="tm-label">시간</div><div class="tm-row"><input type="time" id="ss-time"></div></div>
+    </div>
+    <div class="tm-label">내용 (선택)</div>
+    <div class="tm-row"><textarea id="ss-memo" placeholder="내용을 입력해주세요" style="height:60px"></textarea></div>
+    <button class="tm-save-btn" onclick="submitShareSched()">📤 민장님께 공유하기</button>
+  </div>
+</div>
+
 <script>
 /* ══ STORAGE ══ */
 const K={todos:'mj_v2_todos',exps:'mj_v2_exps',scheds:'mj_v2_scheds',streak:'mj_v2_streak',routine:d=>'mj_v2_r_'+d};
@@ -1230,6 +1252,14 @@ const DEFAULT_RM=[
   {id:'r7',time:'10:00',emoji:'✋',text:'핸즈 확인'},
   {id:'r8',time:'10:00',emoji:'👥',text:'파트너 출근 체크'},
   {id:'r9',time:'10:30',emoji:'💼',text:'미용 구직 보기'}
+];
+// 직원용 기본 루틴 (5개)
+const STAFF_DEFAULT_RM=[
+  {id:'r1',time:'06:00',emoji:'🌅',text:'기상'},
+  {id:'r2',time:'06:30',emoji:'📚',text:'독서'},
+  {id:'r3',time:'07:00',emoji:'💪',text:'운동'},
+  {id:'r4',time:'08:00',emoji:'🍳',text:'식사'},
+  {id:'r5',time:'09:00',emoji:'🌟',text:'뉴모닝'}
 ];
 let RM=LS('mj_v2_routine_list', DEFAULT_RM);
 function saveRM(){SS('mj_v2_routine_list', RM);scheduleSync();}
@@ -2756,15 +2786,20 @@ function enterStaffAs(name, store){
   const hdrDate = document.getElementById('hdr-date');
   const nn = new Date();
   if(hdrDate) hdrDate.textContent = name + ' · ' + store + ' · ' + (nn.getMonth()+1)+'월'+nn.getDate()+'일';
-  // 데이터 초기화 (각 유저별 빈 데이터로 시작, Firebase에서 불러옴)
+  // 데이터 초기화 (직원용 기본 루틴 적용)
   allTodos=[];
   exps=[];
   schedules=[];
   streak=0;
   rState={};
+  // 직원 루틴: 저장된 것 없으면 기본 5개
+  const savedRM=localStorage.getItem('mj_v2_routine_list');
+  if(!savedRM) RM=STAFF_DEFAULT_RM;
+  else RM=JSON.parse(savedRM);
   renderTodos();renderExps();renderRoutine();
   if(document.getElementById('cl-list'))renderChecklist();
   initCloud();
+  setTimeout(setupStoreAccess, 100);
   loadSharedCalendar();
   // 직원은 개인 지출만
   const storeCard=document.querySelector('#tab-expense .card');
@@ -3246,6 +3281,110 @@ function checkStaffPin(){
     document.getElementById('staff-pin-input').focus();
     setTimeout(()=>document.getElementById('staff-pin-error').textContent='', 1500);
   }
+}
+
+
+/* ══ STORE ACCESS CONTROL ══ */
+function getAllowedStores(){
+  if(currentUserIsAdmin) return ['비쿱','제니스','중산','마샬','개인'];
+  const name = localStorage.getItem('mj_staff_name')||'';
+  if(name==='인재') return ['제니스','개인'];
+  if(name==='최재희') return ['중산','개인'];
+  if(name==='영우') return ['마샬','개인'];
+  return ['개인']; // 나머지 모두 개인만
+}
+
+function setupStoreAccess(){
+  const allowed = getAllowedStores();
+  const isAdmin = currentUserIsAdmin;
+  
+  // 매장 선택 카드 - 어드민만 표시
+  const storeCard = document.querySelector('#tab-expense > .card:first-child');
+  if(storeCard) storeCard.style.display = isAdmin ? 'block' : 'none';
+  
+  // 지출 추가 - 매장 칩 필터링
+  const storeChips = document.querySelectorAll('.store-chip');
+  storeChips.forEach(chip => {
+    const storeName = chip.textContent.replace(/[✂️💈🪮👤🏠]/g,'').trim();
+    const storeMatch = Object.keys({'비쿱':'비쿱','제니스':'제니스','중산':'중산','마샬':'마샬','개인':'개인'}).find(s=>storeName.includes(s));
+    if(storeMatch && !allowed.includes(storeMatch)){
+      chip.style.display='none';
+    } else {
+      chip.style.display='';
+    }
+  });
+  
+  // 기본 매장 설정
+  if(!isAdmin){
+    selectedExpStore = allowed[0];
+    // 첫번째 허용 매장 선택
+    const firstAllowed = document.getElementById('es-'+allowed[0]);
+    if(firstAllowed){
+      document.querySelectorAll('.store-chip').forEach(b=>b.classList.remove('sel'));
+      firstAllowed.classList.add('sel');
+    }
+    currentStore = allowed[0];
+  }
+}
+
+
+/* ══ SHARE SCHEDULE ══ */
+function openShareSchedModal(){
+  document.getElementById('ss-title').value='';
+  document.getElementById('ss-date').value=selDay||todayStr();
+  document.getElementById('ss-time').value='';
+  document.getElementById('ss-memo').value='';
+  document.getElementById('share-sched-modal-bg').classList.remove('hidden');
+}
+
+async function submitShareSched(){
+  const title=document.getElementById('ss-title').value.trim();
+  if(!title){alert('제목을 입력해주세요');return;}
+  const date=document.getElementById('ss-date').value;
+  const time=document.getElementById('ss-time').value;
+  const memo=document.getElementById('ss-memo').value.trim();
+  const sender=localStorage.getItem('mj_staff_name')||'직원';
+  const store=localStorage.getItem('mj_staff_store')||'';
+  
+  try{
+    // 민장 캘린더에 직접 추가 (staff_requests 컬렉션에 저장)
+    const reqData={fields:{
+      name:{stringValue:sender},
+      title:{stringValue:'['+sender+'/'+store+'] '+title},
+      date:{stringValue:date},
+      time:{stringValue:time||''},
+      memo:{stringValue:memo},
+      status:{stringValue:'pending'},
+      isPrivate:{booleanValue:false},
+      type:{stringValue:'schedule_share'},
+      createdAt:{integerValue:String(Date.now())}
+    }};
+    const res=await fetch('https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents/staff_requests?key='+FB_API_KEY,{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(reqData)
+    });
+    if(!res.ok)throw new Error('전송 실패');
+    document.getElementById('share-sched-modal-bg').classList.add('hidden');
+    alert('✅ 민장님께 일정이 공유됐어요!\n민장님이 확인 후 캘린더에 추가해요.');
+  }catch(e){
+    alert('공유 실패: '+e.message);
+  }
+}
+
+// 민장 어드민 - 공유 요청에서 일정 수락
+async function acceptScheduleRequest(docId, title, date, time){
+  const newSched={id:Date.now(),date,title,start:time||'09:00',end:'',color:'#5b9cf6',memo:'직원 공유 일정',repeat:'none'};
+  schedules.push(newSched);
+  saveScheds();
+  renderCal();
+  try{
+    await fetch('https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents/staff_requests/'+docId+'?key='+FB_API_KEY+'&updateMask.fieldPaths=status',{
+      method:'PATCH',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fields:{status:{stringValue:'accepted'}}})
+    });
+  }catch(e){}
+  scheduleSync();
+  alert('✅ 캘린더에 추가됐어요!');
+  loadStaffRequests();
 }
 
 /* ══ BOOT ══ */
