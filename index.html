@@ -1292,7 +1292,7 @@ function toggleRoutineEdit(){
 
 function renderRoutine(){
   // 시간순 자동 정렬
-  RM.sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00'));
+  if(RM&&RM.length) RM.sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00'));
   const done=RM.filter(r=>rState[r.id]).length,tot=RM.length,pct=tot?Math.round(done/tot*100):0;
   document.getElementById('r-prog').style.width=pct+'%';
   document.getElementById('r-meta').textContent=done+'/'+tot+'개 완료 · '+pct+'%';
@@ -2786,9 +2786,20 @@ function enterAdminConfirmed(){
   document.getElementById('staff-view').style.display='none';
   document.getElementById('admin-app').style.display='flex';
   setTimeout(()=>{
-    renderTodos();renderExps();renderRoutine();
-    initCloud();
-    setTimeout(loadStaffRequests,2000);
+    try{renderTodos();}catch(e){console.log('renderTodos err',e);}
+    try{renderExps();}catch(e){console.log('renderExps err',e);}
+    try{renderRoutine();}catch(e){console.log('renderRoutine err',e);}
+    try{loadMemo();}catch(e){console.log('loadMemo err',e);}
+    // 어드민: 매장 카드 복원
+    const storeCard=document.querySelector('#tab-expense > .card:first-child');
+    if(storeCard) storeCard.style.display='block';
+    currentStore='all';
+    // 어드민 팀 탭 표시
+    const teamNav=document.getElementById('nav-team');
+    if(teamNav) teamNav.style.display='flex';
+    try{initCloud();}catch(e){console.log('initCloud err',e);}
+    try{loadSharedCalendar();}catch(e){}
+    setTimeout(()=>{try{loadStaffRequests();}catch(e){}},2000);
   },100);
 }
 
