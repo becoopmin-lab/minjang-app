@@ -2792,10 +2792,14 @@ function enterStaffAs(name, store){
   schedules=[];
   streak=0;
   rState={};
-  // 직원 루틴: 저장된 것 없으면 기본 5개
-  const savedRM=localStorage.getItem('mj_v2_routine_list');
-  if(!savedRM) RM=STAFF_DEFAULT_RM;
-  else RM=JSON.parse(savedRM);
+  // 직원 루틴: 유저별 키로 저장/로드
+  const staffRMKey='mj_v2_routine_'+currentUser;
+  const savedStaffRM=localStorage.getItem(staffRMKey);
+  if(savedStaffRM) RM=JSON.parse(savedStaffRM);
+  else RM=[...STAFF_DEFAULT_RM];
+  // 직원 루틴 저장 함수 오버라이드
+  window._origSaveRM = window.saveRM;
+  window.saveRM = function(){ localStorage.setItem(staffRMKey, JSON.stringify(RM)); };
   renderTodos();renderExps();renderRoutine();
   if(document.getElementById('cl-list'))renderChecklist();
   initCloud();
