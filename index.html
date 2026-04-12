@@ -2346,8 +2346,8 @@ function saveSchedule(){
 
 /* ══ CLOUD SYNC (JSONBin.io) ══ */
 /* ══ FIREBASE REALTIME SYNC ══ */
-const FB_API_KEY = 'AIzaSyClE-7P_ENLUvsUTsUmJ_BH9Du01jvWn-4';
-const FB_BASE = 'https://firestore.googleapis.com/v1/projects/branu-7e32b/databases/(default)/documents';
+// FB_API_KEY declared above;
+// FB_BASE declared above;
 // user vars moved to top
 // Firebase 경로 (유저별)
 function getUserFbApi(){ 
@@ -2356,9 +2356,9 @@ function getUserFbApi(){
 // 공유 캘린더 경로
 const SHARED_CAL_API = FB_BASE + '/minjang_app/shared_calendar';
 // 기존 호환성
-let FB_API = FB_BASE + '/minjang_app/minjang';
+// FB_API declared above
 
-let syncTimer=null;
+// syncTimer declared above
 let cloudKey='firebase';
 let cloudBin='firebase';
 
