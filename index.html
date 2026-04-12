@@ -2686,11 +2686,11 @@ async function rejectRequest(docId){
 
 
 /* ══ PIN ══ */
-const ADMIN_PIN='3456';
+var ADMIN_PIN='3456';
 let pinValue='';
 function checkPin(){
   const val=document.getElementById('pin-input-field').value;
-  if(val===ADMIN_PIN){
+  if(val==='3456'){
     document.getElementById('pin-overlay').style.display='none';
     document.getElementById('pin-input-field').value='';
     document.getElementById('pin-error').textContent='';
