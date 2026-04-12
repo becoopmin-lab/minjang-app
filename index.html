@@ -315,11 +315,8 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 .landing-logo{
   width:110px;height:110px;margin-bottom:8px;
   animation:logoFadeIn 1.2s ease forwards;
-  background:#fff;
-  border-radius:50%;
-  padding:12px;
 }
-.landing-logo img{width:100%;height:100%;object-fit:contain;filter:none;}
+.landing-logo img{width:100%;height:100%;object-fit:contain;mix-blend-mode:luminosity;opacity:0.9;filter:sepia(1) saturate(3) hue-rotate(5deg) brightness(0.85);}
 .landing-title{
   font-family:'Times New Roman',serif;
   font-size:28px;font-weight:400;
@@ -936,12 +933,9 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
           <div class="day-panel-hdr">
             <span class="day-panel-title" id="day-title"></span>
             <div style="display:flex;gap:6px">
-              <button onclick="openCalAddMenu(this)" style="height:34px;padding:0 14px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 추가</button>
+              <button onclick="openModal()" style="height:34px;padding:0 14px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 일정</button>
             </div>
-            <div id="cal-add-menu" style="display:none;position:absolute;right:14px;top:50px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);border:1px solid #eee;z-index:50;overflow:hidden;min-width:140px">
-              <button onclick="openShareSchedModal();document.getElementById('cal-add-menu').style.display='none'" style="width:100%;height:44px;background:rgba(26,158,96,.05);border:none;border-bottom:1px solid #f0f0f0;font-size:13px;font-weight:700;color:#1a9e60;cursor:pointer;font-family:inherit;text-align:left;padding:0 14px">📤 매장 공유</button>
-              <button onclick="openModal();document.getElementById('cal-add-menu').style.display='none'" style="width:100%;height:44px;background:none;border:none;font-size:13px;font-weight:600;color:#111;cursor:pointer;font-family:inherit;text-align:left;padding:0 14px">📅 일정 추가</button>
-            </div>
+
           </div>
           <div id="day-scheds"></div>
         </div>
@@ -1140,19 +1134,18 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 <!-- SCHEDULE MODAL -->
 <div class="modal-bg hidden" id="modal-bg" onclick="closeModalBg(event)">
   <div class="modal">
-    <h3>일정 추가</h3>
+    <h3 id="modal-heading">일정 추가</h3>
     <div class="mrow"><input type="text" id="m-title" placeholder="일정 제목 *"></div>
-    <div class="mrow"><input type="time" id="m-start" value="09:00"><input type="time" id="m-end" value="10:00"></div>
-    <div class="mrow"><input type="text" id="m-memo" placeholder="메모 (선택)"></div>
+    <div class="mrow"><input type="date" id="m-date"><input type="time" id="m-start" value="09:00"></div>
+    <div class="mrow"><input type="time" id="m-end" value="10:00"><input type="text" id="m-memo" placeholder="메모 (선택)"></div>
     <div class="mrow"><label>반복</label><select id="m-repeat"><option value="none">없음</option><option value="daily">매일</option><option value="weekly">매주</option><option value="monthly">매월</option></select></div>
-    <div class="mrow"><label>지출 연동</label><button class="toggle" id="exp-toggle" onclick="toggleExpLink()"></button></div>
-    <div id="exp-link-row" style="display:none">
-      <div class="mrow"><input type="number" id="m-exp-amt" placeholder="연동 금액 (원)"><select id="m-exp-cat"><option>식비</option><option>교통</option><option>쇼핑</option><option>카페</option><option>기타</option></select></div>
-    </div>
     <div class="color-pick" id="cpick"></div>
+    <div style="margin-bottom:10px">
+      <button onclick="openShareFromModal()" style="width:100%;height:40px;background:rgba(26,158,96,.08);border:1.5px solid rgba(26,158,96,.3);border-radius:10px;font-size:13px;font-weight:700;color:#1a9e60;cursor:pointer;font-family:inherit">📤 매장 일정 공유</button>
+    </div>
     <div class="modal-btns">
       <button class="cbtn cancel" onclick="closeModal()">취소</button>
-      <button class="cbtn save" onclick="saveSchedule()">저장</button>
+      <button class="cbtn save" id="modal-save-btn" onclick="saveSchedule()">저장</button>
     </div>
   </div>
 </div>
@@ -2279,7 +2272,7 @@ function renderDayPanel(){
   const ds=getScheds(dk).sort((a,b)=>a.start.localeCompare(b.start));
   const el=document.getElementById('day-scheds');
   if(!ds.length){el.innerHTML='<p class="empty">등록된 일정이 없어요</p>';return;}
-  el.innerHTML=ds.map(s=>`<div class="sched-item"><div class="sched-bar" style="background:${s.color}"></div><div class="sched-info"><div class="sched-title">${s.title}${s.repeat!=='none'?`<span class="rec-badge">🔄 ${RL[s.repeat]}</span>`:''}</div><div class="sched-time">${s.start} – ${s.end}${s.memo?' · '+s.memo:''}</div></div>${s.date===dk?`<button class="dbtn" onclick="delSched(${s.id})">✕</button>`:''}</div>`).join('');
+  el.innerHTML=ds.map(s=>`<div class="sched-item"><div class="sched-bar" style="background:${s.color}"></div><div class="sched-info"><div class="sched-title">${s.title}${s.repeat!=='none'?`<span class="rec-badge">🔄 ${RL[s.repeat]}</span>`:''}</div><div class="sched-time">${s.start} – ${s.end}${s.memo?' · '+s.memo:''}</div></div>${s.date===dk?`<div style="display:flex;gap:4px"><button class="dbtn" onclick="editSched(${s.id})" style="color:#1a9e60">✏️</button><button class="dbtn" onclick="delSched(${s.id})">✕</button></div>`:''}</div>`).join('');
 }
 function delSched(id){schedules=schedules.filter(s=>s.id!==id);saveScheds();renderCal();}
 function renderWeek(){
@@ -2322,15 +2315,30 @@ function renderWDP(){
 function buildCP(){document.getElementById('cpick').innerHTML=PALETTE.map((c,i)=>`<div class="cpick ${i===0?'sel':''}" style="background:${c}" onclick="pickColor('${c}',this)"></div>`).join('');pickedColor=PALETTE[0];}
 function pickColor(c,el){pickedColor=c;document.querySelectorAll('.cpick').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');}
 function toggleExpLink(){expLinkOn=!expLinkOn;document.getElementById('exp-toggle').classList.toggle('on',expLinkOn);document.getElementById('exp-link-row').style.display=expLinkOn?'block':'none';}
-function openModal(){buildCP();document.getElementById('modal-bg').classList.remove('hidden');}
+function openModal(){
+  editingSchedId=null;
+  buildCP();
+  if(document.getElementById('modal-heading'))document.getElementById('modal-heading').textContent='일정 추가';
+  if(document.getElementById('modal-save-btn'))document.getElementById('modal-save-btn').textContent='저장';
+  if(document.getElementById('m-date'))document.getElementById('m-date').value=selDay||todayStr();
+  document.getElementById('modal-bg').classList.remove('hidden');
+}
 function closeModal(){document.getElementById('modal-bg').classList.add('hidden');expLinkOn=false;document.getElementById('exp-toggle').classList.remove('on');document.getElementById('exp-link-row').style.display='none';}
 function closeModalBg(e){if(e.target===document.getElementById('modal-bg'))closeModal();}
 function saveSchedule(){
   const t=document.getElementById('m-title').value.trim();if(!t)return;
-  const dk=fmtDate(calYear,calMonth,selDate),rep=document.getElementById('m-repeat').value;
-  if(expLinkOn){const a=parseInt(document.getElementById('m-exp-amt').value);if(a&&!isNaN(a)){const cat=document.getElementById('m-exp-cat').value;exps.push({id:Date.now(),desc:t,cat,amt:a,date:dk});saveExps();renderExps();}}
-  schedules.push({id:Date.now(),date:dk,title:t,start:document.getElementById('m-start').value,end:document.getElementById('m-end').value,color:pickedColor,memo:document.getElementById('m-memo').value.trim(),repeat:rep});
+  const dateVal=document.getElementById('m-date').value;
+  const dk=dateVal||fmtDate(calYear,calMonth,selDate);
+  const rep=document.getElementById('m-repeat').value;
+  if(editingSchedId){
+    schedules=schedules.map(s=>s.id===editingSchedId?{...s,title:t,date:dk,start:document.getElementById('m-start').value,end:document.getElementById('m-end').value,color:pickedColor,memo:document.getElementById('m-memo').value.trim(),repeat:rep}:s);
+    editingSchedId=null;
+  }else{
+    schedules.push({id:Date.now(),date:dk,title:t,start:document.getElementById('m-start').value,end:document.getElementById('m-end').value,color:pickedColor,memo:document.getElementById('m-memo').value.trim(),repeat:rep});
+  }
   document.getElementById('m-title').value='';document.getElementById('m-memo').value='';document.getElementById('m-repeat').value='none';
+  if(document.getElementById('modal-heading'))document.getElementById('modal-heading').textContent='일정 추가';
+  if(document.getElementById('modal-save-btn'))document.getElementById('modal-save-btn').textContent='저장';
   closeModal();saveScheds();if(calView==='month')renderCal();else renderWeek();
 }
 
@@ -3477,6 +3485,43 @@ async function acceptScheduleRequest(docId, title, date, time){
   scheduleSync();
   alert('✅ 캘린더에 추가됐어요!');
   loadStaffRequests();
+}
+
+
+/* ══ SCHEDULE EDIT ══ */
+let editingSchedId = null;
+
+function editSched(id){
+  const s = schedules.find(x=>x.id===id);
+  if(!s) return;
+  editingSchedId = id;
+  buildCP();
+  document.getElementById('modal-heading').textContent = '일정 수정';
+  document.getElementById('m-title').value = s.title;
+  document.getElementById('m-date').value = s.date;
+  document.getElementById('m-start').value = s.start;
+  document.getElementById('m-end').value = s.end||'';
+  document.getElementById('m-memo').value = s.memo||'';
+  document.getElementById('m-repeat').value = s.repeat||'none';
+  document.getElementById('modal-save-btn').textContent = '수정 완료';
+  // Pick color
+  pickedColor = s.color;
+  document.querySelectorAll('.cpick').forEach(el=>{
+    el.classList.toggle('sel', el.style.background===s.color);
+  });
+  document.getElementById('modal-bg').classList.remove('hidden');
+}
+
+function openShareFromModal(){
+  const title = document.getElementById('m-title').value.trim();
+  const date = document.getElementById('m-date').value;
+  const time = document.getElementById('m-start').value;
+  closeModal();
+  // Pre-fill share modal
+  document.getElementById('ss-title').value = title||'';
+  document.getElementById('ss-date').value = date||selDay||todayStr();
+  document.getElementById('ss-time').value = time||'';
+  document.getElementById('share-sched-modal-bg').classList.remove('hidden');
 }
 
 /* ══ BOOT ══ */
