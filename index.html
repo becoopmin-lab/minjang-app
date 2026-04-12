@@ -209,7 +209,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 .we-title{font-size:13px;font-weight:600;color:#111111}
 .we-time{font-size:11px;color:#999999;margin-top:2px}
 .we-date{font-size:11px;color:#999999;margin-left:auto;white-space:nowrap}
-.day-panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.day-panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;position:relative}
 .day-panel-title{font-size:14px;font-weight:700;color:#111111}
 .mini-abtn{background:#1a9e60;color:#ffffff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
 .sched-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)}
@@ -931,8 +931,11 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
           <div class="day-panel-hdr">
             <span class="day-panel-title" id="day-title"></span>
             <div style="display:flex;gap:6px">
-              <button onclick="openShareSchedModal()" style="height:34px;padding:0 10px;background:rgba(26,158,96,.1);color:#1a9e60;border:1px solid rgba(26,158,96,.3);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📤 공유</button>
-              <button onclick="openModal()" style="height:34px;padding:0 14px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 추가</button>
+              <button onclick="openCalAddMenu(this)" style="height:34px;padding:0 14px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 추가</button>
+            </div>
+            <div id="cal-add-menu" style="display:none;position:absolute;right:14px;top:50px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);border:1px solid #eee;z-index:50;overflow:hidden;min-width:140px">
+              <button onclick="openModal();document.getElementById('cal-add-menu').style.display='none'" style="width:100%;height:44px;background:none;border:none;border-bottom:1px solid #f0f0f0;font-size:13px;font-weight:600;color:#111;cursor:pointer;font-family:inherit;text-align:left;padding:0 14px">📅 일정 추가</button>
+              <button onclick="openShareSchedModal();document.getElementById('cal-add-menu').style.display='none'" style="width:100%;height:44px;background:none;border:none;font-size:13px;font-weight:600;color:#1a9e60;cursor:pointer;font-family:inherit;text-align:left;padding:0 14px">📤 매장 공유</button>
             </div>
           </div>
           <div id="day-scheds"></div>
@@ -1285,6 +1288,8 @@ function toggleRoutineEdit(){
 }
 
 function renderRoutine(){
+  // 시간순 자동 정렬
+  RM.sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00'));
   const done=RM.filter(r=>rState[r.id]).length,tot=RM.length,pct=tot?Math.round(done/tot*100):0;
   document.getElementById('r-prog').style.width=pct+'%';
   document.getElementById('r-meta').textContent=done+'/'+tot+'개 완료 · '+pct+'%';
@@ -3295,44 +3300,97 @@ function getAllowedStores(){
   if(name==='인재') return ['제니스','개인'];
   if(name==='최재희') return ['중산','개인'];
   if(name==='영우') return ['마샬','개인'];
-  return ['개인']; // 나머지 모두 개인만
+  return ['개인'];
+}
+
+function getManagerStoreName(){
+  const name = localStorage.getItem('mj_staff_name')||'';
+  if(name==='인재') return '제니스';
+  if(name==='최재희') return '중산';
+  if(name==='영우') return '마샬';
+  return null;
 }
 
 function setupStoreAccess(){
   const allowed = getAllowedStores();
   const isAdmin = currentUserIsAdmin;
+  const managerStore = getManagerStoreName();
   
   // 매장 선택 카드 - 어드민만 표시
   const storeCard = document.querySelector('#tab-expense > .card:first-child');
   if(storeCard) storeCard.style.display = isAdmin ? 'block' : 'none';
   
-  // 지출 추가 - 매장 칩 필터링
+  // 지출 추가 매장 칩 필터링
   const storeChips = document.querySelectorAll('.store-chip');
   storeChips.forEach(chip => {
-    const storeName = chip.textContent.replace(/[✂️💈🪮👤🏠]/g,'').trim();
-    const storeMatch = Object.keys({'비쿱':'비쿱','제니스':'제니스','중산':'중산','마샬':'마샬','개인':'개인'}).find(s=>storeName.includes(s));
-    if(storeMatch && !allowed.includes(storeMatch)){
+    const id = chip.id || '';
+    const storeName = id.replace('es-','');
+    if(storeName && !allowed.includes(storeName)){
       chip.style.display='none';
     } else {
       chip.style.display='';
     }
   });
   
+  // 인재/재희/영우: 매장탭 위에 매장/개인 전환 버튼 추가
+  const expDailyView = document.getElementById('ev-daily');
+  const existingMgrTab = document.getElementById('mgr-store-tab');
+  if(!isAdmin && managerStore && expDailyView && !existingMgrTab){
+    const ms2 = managerStore;
+    const tabDiv2 = document.createElement('div');
+    tabDiv2.id = 'mgr-store-tab';
+    tabDiv2.style.cssText = 'display:flex;gap:6px;margin-bottom:10px';
+    const b1 = document.createElement('button');
+    b1.className='tvsw on'; b1.id='mgr-tab-store'; b1.textContent='🏪 '+ms2;
+    b1.onclick=function(){setMgrExpTab(ms2,this);};
+    const b2 = document.createElement('button');
+    b2.className='tvsw'; b2.id='mgr-tab-personal'; b2.textContent='👤 개인';
+    b2.onclick=function(){setMgrExpTab('개인',this);};
+    tabDiv2.appendChild(b1); tabDiv2.appendChild(b2);
+    expDailyView.insertBefore(tabDiv2, expDailyView.firstChild);
+  }
+  
   // 기본 매장 설정
   if(!isAdmin){
-    selectedExpStore = allowed[0];
-    // 첫번째 허용 매장 선택
-    const firstAllowed = document.getElementById('es-'+allowed[0]);
+    selectedExpStore = managerStore||'개인';
+    currentStore = managerStore||'개인';
+    const firstAllowed = document.getElementById('es-'+(managerStore||'개인'));
     if(firstAllowed){
       document.querySelectorAll('.store-chip').forEach(b=>b.classList.remove('sel'));
       firstAllowed.classList.add('sel');
     }
-    currentStore = allowed[0];
   }
+}
+
+function setMgrExpTab(store, btn){
+  currentStore = store;
+  selectedExpStore = store;
+  document.querySelectorAll('#mgr-store-tab .tvsw').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  // 매장 칩도 변경
+  const chipEl = document.getElementById('es-'+store);
+  if(chipEl){
+    document.querySelectorAll('.store-chip').forEach(b=>b.classList.remove('sel'));
+    chipEl.classList.add('sel');
+  }
+  renderExps();
 }
 
 
 /* ══ SHARE SCHEDULE ══ */
+function openCalAddMenu(btn){
+  const menu=document.getElementById('cal-add-menu');
+  menu.style.display=menu.style.display==='none'?'block':'none';
+  // Close on outside click
+  setTimeout(()=>{
+    document.addEventListener('click',function close(e){
+      if(!menu.contains(e.target)&&e.target!==btn){
+        menu.style.display='none';
+        document.removeEventListener('click',close);
+      }
+    });
+  },100);
+}
 function openShareSchedModal(){
   document.getElementById('ss-title').value='';
   document.getElementById('ss-date').value=selDay||todayStr();
