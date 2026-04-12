@@ -1276,9 +1276,9 @@ function saveRM(){SS('mj_v2_routine_list', RM);scheduleSync();}
 
 let rState=LS(K.routine(todayStr()),{});
 let streak=LS(K.streak,0);
-let routineEditMode=false;
-let editingRoutineId=null;
-let selectedEmoji='🌅';
+// let routineEditMode=false;
+// let editingRoutineId=null; // declared above
+// let selectedEmoji='🌅'; // declared above // declared above
 function saveR(){SS(K.routine(todayStr()),rState);scheduleSync();}
 
 const EMOJI_LIST=['🌅','🧘','📺','🧠','🏢','🧹','✋','👥','💼','📚','🏃','💪','🎯','☕','🥗','🚿','🛏️','📝','🎵','🌿','💧','🧘‍♂️','🍎','🏋️'];
@@ -1423,7 +1423,7 @@ allTodos=allTodos.map(t=>({createdDate:todayStr(),completedDate:null,archived:fa
 function activeTodos(){return allTodos.filter(t=>!t.archived);}
 function saveTodos(){SS(K.todos,allTodos);scheduleSync();}
 
-let todoFilter='all',openTodoId=null,todoViewMode='today';
+// let todoFilter='all',openTodoId=null,todoViewMode='today'; // declared above
 let histYear=new Date().getFullYear(),histMonth=new Date().getMonth();
 
 const pLabel={'urgent':'🚨 긴급','store':'🏢 매장','personal':'👤 개인','high':'🔴 높음','mid':'🟡 보통','low':'🟢 낮음'};
@@ -1443,8 +1443,8 @@ let fixedExps=LS('mj_v2_fixed_exps',[]);
 function saveFixed(){SS('mj_v2_fixed_exps',fixedExps);scheduleSync();}
 
 // Store & view state
-let currentStore='all';
-let expView='daily';
+// let currentStore='all'; // declared above
+// let expView='daily'; // declared above
 let expYear=new Date().getFullYear(),expMonth=new Date().getMonth();
 let emChart=null,eyChart=null;
 let selectedExpCat='식비';
@@ -2073,7 +2073,7 @@ function delE(id){exps=exps.filter(e=>e.id!==id);saveExps();renderExps();}
 document.getElementById('e-amt').addEventListener('keypress',e=>{if(e.key==='Enter')addExp();});
 
 /* ── FIXED EXPENSES ── */
-let currentFeStore='all';
+// let currentFeStore='all'; // declared above
 function setFeStore(store,btn){
   currentFeStore=store;
   document.querySelectorAll('#fe-store-tabs .tvsw').forEach(b=>b.classList.remove('on'));
@@ -3065,7 +3065,7 @@ async function submitStaffRequest(){
 
 
 /* ══ CALENDAR VIEW TABS ══ */
-let calViewTab='day';
+// let calViewTab='day'; // declared above
 
 function setCalViewTab(tab, btn){
   calViewTab=tab;
@@ -3543,3 +3543,4 @@ setInterval(()=>{if(document.getElementById('admin-app')&&document.getElementByI
 </script>
 </body>
 </html>
+ 
