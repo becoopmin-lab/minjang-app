@@ -302,8 +302,8 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 
 .landing-bg{
   position:fixed;inset:0;z-index:999;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:32px 24px;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:40px 24px 60px;overflow-y:auto;overflow-x:hidden;
   background:#0a0a08;
 }
 .landing-bg::before{
@@ -349,6 +349,8 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
   transition:all .3s ease;
   margin-bottom:1px;
   position:relative;overflow:hidden;
+  -webkit-tap-highlight-color:rgba(212,175,110,0.2);
+  touch-action:manipulation;
 }
 .landing-btn::after{
   content:'';position:absolute;inset:0;
@@ -371,15 +373,17 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 }
 .landing-btn-staff:hover{background:rgba(212,175,110,0.12);border-color:rgba(212,175,110,0.4)!important;}
 .name-entry-btn{
-  width:100%;height:44px;
+  width:100%;height:48px;
   display:flex;align-items:center;
   padding:0 18px;
   background:transparent;border:none;border-bottom:1px solid rgba(212,175,110,0.08);
   color:rgba(212,175,110,0.8);
-  font-size:13px;letter-spacing:.1em;
+  font-size:14px;letter-spacing:.1em;
   cursor:pointer;font-family:inherit;
   transition:all .2s;
   text-align:left;
+  -webkit-tap-highlight-color:rgba(212,175,110,0.2);
+  touch-action:manipulation;
 }
 .name-entry-btn:last-child{border-bottom:none;}
 .name-entry-btn:hover{background:rgba(212,175,110,0.08);color:#d4af6e;padding-left:24px;}
@@ -475,6 +479,8 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
       <button onclick="enterStaffWithPin('도형','마샬','02월 03일')" class="name-entry-btn">도형</button>
       <div style="padding:10px 18px 6px;font-size:9px;color:rgba(212,175,110,0.4);letter-spacing:.3em;text-transform:uppercase;border-top:1px solid rgba(212,175,110,0.08)">파트너</div>
       <button onclick="enterStaffWithPin('지우','마샬','05월 31일')" class="name-entry-btn">지우</button>
+      <button onclick="enterStaffWithPin('영우','마샬','01월 01일')" class="name-entry-btn">영우</button>
+      <button onclick="enterStaffWithPin('영우','마샬','01월 01일')" class="name-entry-btn">영우</button>
     </div>
 
     <!-- 중산 -->
