@@ -1587,11 +1587,6 @@ function renderTodos(){
   };
 
   let html='';
-  // 미완료 과거 할일 → 오늘 섹션 아래 추가
-  if(overdueItems.length){
-    if(!groups[nowStr])groups[nowStr]=[];
-    groups[nowStr].__overdue=overdueItems;
-  }
   // 과거 완료 할일 접기 버튼
   const pastCount=Object.values(pastGroups).flat().length;
   if(pastCount>0){
@@ -1620,6 +1615,7 @@ function renderTodos(){
     });
     html+='</div>';
   }
+  // 오늘 섹션 먼저 렌더링
   sortedDates.forEach(date=>{
     const items=groups[date];
     const allDone=items.every(t=>t.done);
