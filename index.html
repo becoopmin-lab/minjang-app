@@ -1615,8 +1615,26 @@ function renderTodos(){
     });
     html+='</div>';
   }
-  // 오늘 섹션 먼저 렌더링
-  sortedDates.forEach(date=>{
+  // 오늘 섹션 먼저, 그다음 미래
+  let futureDates = sortedDates.filter(d=>d!==nowStr);
+  let renderDates = sortedDates.includes(nowStr) ? [nowStr] : [];
+
+  // overdueItems → 오늘 그룹에 __overdue 로 연결
+  if(overdueItems.length){
+    if(!groups[nowStr]){groups[nowStr]=[];renderDates=[nowStr];}
+    groups[nowStr].__overdue=overdueItems;
+  }
+
+  // 오늘 섹션 없고 미완료만 있을 때 → 오늘 헤더 만들어서 표시
+  if(!groups[nowStr] && overdueItems.length){
+    groups[nowStr]=[];
+    groups[nowStr].__overdue=overdueItems;
+    renderDates=[nowStr];
+  }
+
+  // 오늘 섹션만 먼저
+  let todayHtml = '';
+  renderDates.forEach(date=>{
     const items=groups[date];
     const allDone=items.every(t=>t.done);
     const isToday=date===nowStr;
@@ -1624,7 +1642,9 @@ function renderTodos(){
     const hColor=isToday?'#1a9e60':isPast?'#aaa':'#555';
     const hBorder=isToday?'#1a9e60':'#eee';
     const cntColor=isToday?'#1a9e60':'#aaa';
-    html+='<div style="margin-bottom:4px"><div style="font-size:12px;font-weight:800;color:'+hColor+';padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid '+hBorder+';margin-bottom:6px"><span>'+dateLabel(date)+'</span><span style="font-size:11px;font-weight:600;color:'+cntColor+'">'+items.filter(t=>t.done).length+'/'+items.length+' 완료</span></div>';
+    const overdueCount=(items.__overdue||[]).length;
+    const totalForHeader=items.length+overdueCount;
+    html+='<div style="margin-bottom:4px"><div style="font-size:12px;font-weight:800;color:'+hColor+';padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid '+hBorder+';margin-bottom:6px"><span>'+dateLabel(date)+'</span><span style="font-size:11px;font-weight:600;color:'+cntColor+'">'+(items.filter(t=>t.done).length)+'/'+totalForHeader+' 완료'+(overdueCount>0?' <span style="color:#ff4d6d">(미완료 '+overdueCount+')</span>':'')+'</span></div>';
     // Render overdue items under today
     if(date===nowStr && items.__overdue && items.__overdue.length){
       html+='<div style="font-size:11px;font-weight:700;color:#ff4d6d;padding:8px 4px 4px;margin-top:4px;border-top:1px dashed #ffd0d0">⚠️ 미완료 ('+items.__overdue.length+'건)</div>';
@@ -1713,6 +1733,54 @@ function renderTodos(){
         <div style="display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)">
           <button onclick="editTodoModal(${t.id})" style="flex:1;height:36px;border:1px solid rgba(30,217,128,.4);border-radius:9px;background:rgba(26,158,96,.08);color:#1a9e60;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✏️ 수정</button>
           <button onclick="confirmDelete(${t.id})" style="flex:1;height:36px;border:1px solid rgba(255,77,109,.4);border-radius:9px;background:rgba(255,77,109,.06);color:#ff4d6d;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🗑️ 완전 삭제</button>
+        </div>
+        <div id="del-confirm-${t.id}" style="display:none" class="del-confirm">
+          <span>정말 삭제할까요? 기록에서도 사라져요</span>
+          <button class="del-no" onclick="document.getElementById(&apos;del-confirm-${t.id}&apos;).style.display=&apos;none&apos;">취소</button>
+          <button class="del-yes" onclick="deleteTodoPermanent(${t.id})">삭제</button>
+        </div>
+      </div>`:''}
+    </div>`;
+    }).join('');
+    html+='</div>';
+  });
+  // 미래 날짜 섹션 렌더링
+  futureDates.forEach(date=>{
+    const items=groups[date];
+    if(!items||!items.length)return;
+    const isPast=date!=='날짜없음'&&date<nowStr;
+    const hColor=isPast?'#aaa':'#555';
+    const hBorder='#eee';
+    html+='<div style="margin-bottom:4px"><div style="font-size:12px;font-weight:800;color:'+hColor+';padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid '+hBorder+';margin-bottom:6px"><span>'+dateLabel(date)+'</span><span style="font-size:11px;font-weight:600;color:#aaa">'+items.filter(t=>t.done).length+'/'+items.length+' 완료</span></div>';
+    html+=items.map(t=>{
+      const sd=t.subs.filter(s=>s.done).length,st=t.subs.length,isOpen=openTodoId===t.id;
+      let timeBadge='';
+      if(t.dueTime) timeBadge=`<span class="t-time-badge" style="font-size:15px;font-weight:800;color:#111;background:none;padding:0">${t.dueTime}</span>`;
+      const metaRow=timeBadge?`<div class="t-meta">${timeBadge}</div>`:'';
+      const subItems=t.subs.map(s=>`<div class="sub-item"><div class="sub-ck ${s.done?'y':''}" onclick="togSub(${t.id},${s.id})"></div><span class="sub-text ${s.done?'done':''}">${s.text}</span><button class="sub-del" onclick="delSub(${t.id},${s.id})">✕</button></div>`).join('');
+      return `<div class="ti-wrap">
+      <div class="ti">
+        <div class="ck ${t.done?'y':''}" onclick="togT(${t.id})"></div>
+        <div class="t-main" onclick="toggleDetail(${t.id})">
+          <div class="ttext ${t.done?'done':''}">${t.text}${t.category?('<span class="p-badge p-'+(t.category==='urgent'?'high':t.category==='store'?'mid':'low')+'">'+( pLabel[t.category]||'')+'</span>'):''}${t.note||st?'<span class="note-dot"></span>':''}</div>
+          ${metaRow}
+          ${!isOpen&&t.note?`<div class="t-note-preview">📝 ${t.note}</div>`:''}
+          ${!isOpen&&st?`<div class="t-note-preview">☑ 세부 ${sd}/${st}</div>`:''}
+        </div>
+        <button class="expand-btn" onclick="toggleDetail(${t.id})">✏️</button>
+        <button class="dbtn" onclick="archiveTodo(${t.id})" title="숨기기">🗑️</button>
+      </div>
+      ${isOpen?`<div class="t-detail open">
+        <div class="detail-sec">제목</div>
+        <input type="text" value="${escHtml(t.text)}" onchange="updateTodoTitle(${t.id},this.value)" style="width:100%;height:40px;border:1px solid #ddd;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:#111;outline:none;margin-bottom:10px;font-weight:600">
+        <div class="detail-sec">날짜 / 시간</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="date" value="${t.dueDate||''}" onchange="updateDueDate(${t.id},this.value)" style="flex:1;height:36px;border:1px solid #d8d8d4;border-radius:9px;padding:0 10px;font-size:13px;font-family:inherit;background:#f0f0eb;color:#111111;outline:none">
+          <input type="time" value="${t.dueTime||''}" onchange="updateDueTime(${t.id},this.value)" style="flex:1;height:36px;border:1px solid #d8d8d4;border-radius:9px;padding:0 10px;font-size:13px;font-family:inherit;background:#f0f0eb;color:#111111;outline:none">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button onclick="editTodoModal(${t.id})" style="flex:1;height:36px;border:1px solid rgba(30,217,128,.4);border-radius:9px;background:rgba(26,158,96,.08);color:#1a9e60;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✏️ 수정</button>
+          <button onclick="confirmDelete(${t.id})" style="flex:1;height:36px;border:1px solid rgba(255,77,109,.4);border-radius:9px;background:rgba(255,77,109,.06);color:#ff4d6d;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🗑️ 삭제</button>
         </div>
         <div id="del-confirm-${t.id}" style="display:none" class="del-confirm">
           <span>정말 삭제할까요? 기록에서도 사라져요</span>
@@ -3336,5 +3404,4 @@ setInterval(()=>{if(document.getElementById('admin-app')&&document.getElementByI
 </body>
 <!-- v2.0 -->
 </html>
-x 
 x 
