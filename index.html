@@ -1539,13 +1539,19 @@ function renderTodos(){
   const nowStr=todayStr();
   // 날짜별 그룹핑
   const groups={};
-  const pastGroups={}; // 과거 날짜
+  const pastGroups={}; // 과거 완료된 것
+  const overdueItems=[]; // 과거 미완료 → 오늘 아래 표시
   list.forEach(t=>{
     const d=t.dueDate||'날짜없음';
     if(d!=='날짜없음' && d<nowStr){
-      // 과거 → pastGroups
-      if(!pastGroups[d])pastGroups[d]=[];
-      pastGroups[d].push(t);
+      if(!t.done){
+        // 미완료 과거 → 오늘 아래 표시
+        overdueItems.push(t);
+      } else {
+        // 완료된 과거 → pastGroups
+        if(!pastGroups[d])pastGroups[d]=[];
+        pastGroups[d].push(t);
+      }
     } else {
       if(!groups[d])groups[d]=[];
       groups[d].push(t);
@@ -1579,7 +1585,12 @@ function renderTodos(){
   };
 
   let html='';
-  // 과거 할일 접기 버튼
+  // 미완료 과거 할일 → 오늘 섹션 아래 추가
+  if(overdueItems.length){
+    if(!groups[nowStr])groups[nowStr]=[];
+    groups[nowStr].__overdue=overdueItems;
+  }
+  // 과거 완료 할일 접기 버튼
   const pastCount=Object.values(pastGroups).flat().length;
   if(pastCount>0){
     html+='<div id="past-todos-toggle" onclick="togglePastTodos()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;cursor:pointer;border-bottom:2px solid #e8e8e4;margin-bottom:8px">'
@@ -1636,6 +1647,25 @@ function renderTodos(){
         '</div>'+
         (isOpen?'<div class="t-detail open"><div class="detail-sec">제목</div><input type="text" value="'+escHtml(t.text)+'" onchange="updateTodoTitle('+t.id+',this.value)" style="width:100%;height:40px;border:1px solid #ddd;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:#111;outline:none;margin-bottom:10px;font-weight:600"><button onclick="editTodoModal('+t.id+')" style="width:100%;height:36px;border:1px solid rgba(255,77,109,.4);border-radius:9px;background:rgba(255,77,109,.06);color:#ff4d6d;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">✏️ 수정</button><button onclick="confirmDelete('+t.id+')" style="width:100%;height:36px;border:1px solid rgba(255,77,109,.4);border-radius:9px;background:rgba(255,77,109,.06);color:#ff4d6d;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🗑️ 완전 삭제</button></div>':'')+
         '</div>';
+      }).join('');
+    }
+    // 오늘 탭 아래 미완료 과거 항목 표시
+    if(date===nowStr && items.__overdue && items.__overdue.length){
+      html+='<div style="font-size:12px;font-weight:700;color:#ff4d6d;padding:10px 4px 6px;border-top:1px dashed #ffd0d0;margin-top:6px">⚠️ 미완료 ('+items.__overdue.length+'건) — 체크해주세요</div>';
+      html+=items.__overdue.map(t=>{
+        const isOpen2=openTodoId===t.id;
+        return '<div class="ti-wrap" style="border-left:3px solid #ff4d6d;padding-left:8px;margin-left:0;opacity:.9">'
+          +'<div class="ti">'
+          +'<div class="ck '+(t.done?'y':'')+'" onclick="togT('+t.id+')"></div>'
+          +'<div class="t-main" onclick="toggleDetail('+t.id+')">'
+          +'<div class="ttext '+(t.done?'done':'')+'">'+t.text
+          +(t.dueDate?'<span style="font-size:10px;color:#ff4d6d;margin-left:6px">'+t.dueDate.slice(5).replace('-','/')+'</span>':'')
+          +'</div>'
+          +'</div>'
+          +'<button class="dbtn" onclick="archiveTodo('+t.id+')">✕</button>'
+          +'</div>'
+          +(isOpen2?'<div class="t-detail open"><button onclick="editTodoModal('+t.id+')" style="width:100%;height:36px;border:1px solid rgba(26,158,96,.3);border-radius:9px;background:rgba(26,158,96,.06);color:#1a9e60;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">✏️ 수정</button><button onclick="confirmDelete('+t.id+')" style="width:100%;height:36px;border:1px solid rgba(255,77,109,.3);border-radius:9px;background:rgba(255,77,109,.06);color:#ff4d6d;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🗑️ 삭제</button></div>':'')
+          +'</div>';
       }).join('');
     }
     html+=items.map(t=>{
