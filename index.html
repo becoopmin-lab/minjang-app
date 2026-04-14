@@ -1541,14 +1541,15 @@ function renderTodos(){
   const groups={};
   const pastGroups={}; // 과거 완료된 것
   const overdueItems=[]; // 과거 미완료 → 오늘 아래 표시
+  const addedIds=new Set(); // 중복 방지
   list.forEach(t=>{
     const d=t.dueDate||'날짜없음';
+    if(addedIds.has(t.id))return;
+    addedIds.add(t.id);
     if(d!=='날짜없음' && d<nowStr){
       if(!t.done){
-        // 미완료 과거 → 오늘 아래 표시
         overdueItems.push(t);
       } else {
-        // 완료된 과거 → pastGroups
         if(!pastGroups[d])pastGroups[d]=[];
         pastGroups[d].push(t);
       }
