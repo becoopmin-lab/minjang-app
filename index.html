@@ -618,7 +618,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
   <div class="content">
 
     <!-- ── 루틴 ── -->
-    <div class="tab on" id="tab-routine">
+    <div class="tab" id="tab-routine">
       <div class="card">
         <div class="routine-hdr">
           <span class="routine-title">🌅 오늘의 모닝 루틴</span>
@@ -675,7 +675,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
     </div>
 
     <!-- ── 할 일 ── -->
-    <div class="tab" id="tab-todo">
+    <div class="tab on" id="tab-todo">
       <div class="todo-vsw">
         <button class="tvsw on" id="tvs-today" onclick="setTodoView('today',this)">오늘 할 일</button>
         <button class="tvsw" id="tvs-month" onclick="setTodoView('month',this)">월간 기록</button>
@@ -1037,7 +1037,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
   </div>
 
   <div class="nav">
-    <button class="nb on" onclick="sw('todo',this)" data-tab="todo" class="nav-btn">
+    <button class="nb on" id="nav-todo-btn" onclick="sw('todo',this)" data-tab="todo" class="nav-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>할 일</span>
     </button>
     <button class="nb" onclick="sw('expense',this)" data-tab="expense" class="nav-btn">
@@ -1049,7 +1049,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
     <button class="nb" onclick="sw('stats',this)" data-tab="stats" class="nav-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>통계</span>
     </button>
-    <button class="nb" onclick="sw('routine',this)" data-tab="routine" class="nav-btn">
+    <button class="nb" id="nav-routine-btn" onclick="sw('routine',this)" data-tab="routine" class="nav-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg><span>루틴</span>
     </button>
     <button class="nb" id="nav-team" onclick="sw('team',this)" data-tab="team" class="nav-btn" style="display:none">
@@ -1547,12 +1547,13 @@ function renderTodos(){
     if(addedIds.has(t.id))return;
     addedIds.add(t.id);
     if(d!=='날짜없음' && d<nowStr){
-      if(!t.done){
-        overdueItems.push(t);
-      } else {
+      if(!t.done && !t.archived){
+        overdueItems.push(t); // 미완료 과거만
+      } else if(t.done){
         if(!pastGroups[d])pastGroups[d]=[];
         pastGroups[d].push(t);
       }
+      // 미완료는 overdue로만 가고 groups에는 안 감
     } else {
       if(!groups[d])groups[d]=[];
       groups[d].push(t);
@@ -3322,6 +3323,15 @@ function togglePastTodos(){
   if(arrow)arrow.textContent=isOpen?'▾':'▴';
 }
 /* ══ BOOT ══ */
+// 시작시 할일 탭 활성화
+document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+const todoBtnEl=document.querySelector('[data-tab="todo"]');
+if(todoBtnEl)todoBtnEl.classList.add('on');
+const todoTabEl=document.getElementById('tab-todo');
+if(todoTabEl)todoTabEl.classList.add('on');
+const hdrTitleEl=document.getElementById('hdr-title');
+if(hdrTitleEl)hdrTitleEl.textContent='할 일';
 // App initialized but hidden - wait for landing selection
 // initCloud and renders called in enterAdmin()
 setInterval(()=>{if(document.getElementById('admin-app')&&document.getElementById('admin-app').style.display!=='none')autoSyncCloud();}, 30000);
