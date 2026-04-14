@@ -1661,7 +1661,7 @@ function renderTodos(){
           +'<div class="ck '+(t.done?'y':'')+'" onclick="togT('+t.id+')"></div>'
           +'<div class="t-main" onclick="toggleDetail('+t.id+')">'
           +'<div class="ttext '+(t.done?'done':'')+'">'+t.text
-          +(t.dueDate?'<span style="font-size:10px;color:#ff4d6d;margin-left:6px">'+t.dueDate.slice(5).replace('-','/')+'</span>':'')
+          +((t.dueDate||t._displayDate)?'<span style="font-size:10px;color:#ff4d6d;margin-left:6px">'+(t.dueDate||t._displayDate).slice(5).replace('-','/')+'</span>':'')
           +'</div>'
           +'</div>'
           +'<button class="dbtn" onclick="archiveTodo('+t.id+')">✕</button>'
