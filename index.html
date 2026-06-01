@@ -1627,7 +1627,23 @@ function renderTodos(){
   const extraOverdue = rawTodayGroup.filter(t=> !t.done && t.dueDate!==nowStr);
   const extraOverdueIds = new Set(extraOverdue.map(t=>t.id));
   const allOverdue = [...overdueItems, ...extraOverdue];
-  const todayGroup = realTodayGroup;
+  // 오늘 날짜 캘린더 일정도 오늘 할일로 합치기
+  const todaySchedItems = (typeof schedules!=='undefined' && Array.isArray(schedules))
+    ? schedules.filter(s=>s && s.date===nowStr).map(s=>({
+        id: 'sched_'+s.id,
+        text: s.title || '(제목없음)',
+        done: !!s.done,
+        subs: [],
+        note: s.memo || '',
+        category: 'schedule',
+        dueDate: s.date,
+        dueTime: s.start || '',
+        _fromSchedule: true,
+        _schedId: s.id,
+        _color: s.color || ''
+      }))
+    : [];
+  const todayGroup = [...realTodayGroup, ...todaySchedItems];
   const ovCount = allOverdue.length;
   const totalToday = todayGroup.length + ovCount;
   const doneToday = todayGroup.filter(t=>t.done).length;
@@ -1640,6 +1656,18 @@ function renderTodos(){
 
   // 오늘 할일 먼저
   html+=todayGroup.map(t=>{
+    // 캘린더 일정에서 온 항목은 간단한 형태로 (체크박스 + 시간 + 제목)
+    if(t._fromSchedule){
+      const timeTxt = t.dueTime ? `<span style="font-size:13px;font-weight:700;color:#888;margin-left:6px">${t.dueTime}</span>` : '';
+      return `<div class="ti-wrap" style="border-left:3px solid ${t._color||'#1a9e60'};padding-left:8px">
+        <div class="ti">
+          <div class="ck ${t.done?'y':''}" onclick="togT('${t.id}')"></div>
+          <div class="t-main">
+            <div class="ttext ${t.done?'done':''}">📅 ${escHtml(t.text)}${timeTxt}</div>
+          </div>
+        </div>
+      </div>`;
+    }
     const sd=t.subs.filter(s=>s.done).length,st=t.subs.length,isOpen=openTodoId===t.id;
     let timeBadge='';
     if(t.dueTime) timeBadge=`<span style="font-size:15px;font-weight:800;color:#111;background:none;padding:0">${t.dueTime}</span>`;
@@ -1910,6 +1938,21 @@ function quickAddTodoForDate(ymd){
   renderTodos();
 }
 function togT(id){
+  // schedule(캘린더 일정) 체크 처리
+  if(typeof id==='string' && id.indexOf('sched_')===0){
+    const sid = parseInt(id.replace('sched_',''));
+    if(Array.isArray(schedules)){
+      const s = schedules.find(x=>x && x.id===sid);
+      if(s){
+        s.done = !s.done;
+        s.completedDate = s.done ? todayStr() : null;
+        if(typeof saveScheds==='function') saveScheds();
+        if(typeof renderCal==='function') renderCal();
+        renderTodos();
+      }
+    }
+    return;
+  }
   allTodos=allTodos.map(t=>{if(t.id!==id)return t;const done=!t.done;return{...t,done,completedDate:done?todayStr():null};});
   saveTodos();renderTodos();
 }
