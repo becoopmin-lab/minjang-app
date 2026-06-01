@@ -702,16 +702,6 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
       <!-- 오늘 뷰 -->
       <div id="tv-today">
         <div class="card">
-          <button class="add-todo-btn" onclick="openTodoModal()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            할 일 추가하기
-          </button>
-          <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-            <button class="p-chip" id="f-all" onclick="setFilter('all',this)" style="background:#1a9e60;color:#ffffff;border-color:#1a9e60">전체</button>
-            <button class="p-chip" id="f-urgent" onclick="setFilter('urgent',this)">🚨 긴급</button>
-            <button class="p-chip" id="f-store" onclick="setFilter('store',this)">🏢 매장</button>
-            <button class="p-chip" id="f-personal" onclick="setFilter('personal',this)">👤 개인</button>
-          </div>
           <div id="t-list"></div>
         </div>
 
@@ -1651,7 +1641,7 @@ function renderTodos(){
   html+='<div style="margin-bottom:4px">';
   html+='<div style="font-size:12px;font-weight:800;color:#1a9e60;padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #1a9e60;margin-bottom:6px">';
   html+='<span>'+dateLabel(nowStr)+'</span>';
-  html+='<span style="font-size:11px;font-weight:600;color:#1a9e60">'+doneToday+'/'+totalToday+' 완료'+(ovCount>0?' <span style="color:#ff4d6d">(미완료 '+ovCount+')</span>':'')+'</span>';
+  html+='<span style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;color:#1a9e60">'+doneToday+'/'+totalToday+' 완료'+(ovCount>0?' <span style="color:#ff4d6d">(미완료 '+ovCount+')</span>':'')+'</span><button onclick="quickAddTodoForDate(\''+nowStr+'\')" style="background:#1a9e60;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;font-family:inherit">+</button></span>';
   html+='</div>';
 
   // 오늘 할일 먼저
@@ -1717,6 +1707,27 @@ function renderTodos(){
     </div>`;
   }).join('');
 
+  // 오늘 섹션 안 ─ 지난 완료 할일 토글
+  const todayDoneArchived = list.filter(t=>t.done && t.completedDate===nowStr);
+  // pastGroups에는 dueDate가 과거이고 완료된 항목들이 있음 → 오늘 토글로 표시
+  const allPastDone = [];
+  Object.values(pastGroups).forEach(arr=>arr.forEach(t=>allPastDone.push(t)));
+  if(allPastDone.length>0){
+    allPastDone.sort((a,b)=>(b.dueDate||'').localeCompare(a.dueDate||''));
+    html+='<div onclick="togglePastTodos()" style="margin-top:10px;padding:8px 10px;background:#f8f8f4;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:#888">'
+      +'<span>⏰ 지난 완료 할일 ('+allPastDone.length+'개)</span>'
+      +'<span id="past-arrow" style="font-size:11px;color:#aaa">▾</span></div>'
+      +'<div id="past-todos-list" style="display:none;padding:6px 0">';
+    allPastDone.forEach(t=>{
+      const dlbl = t.dueDate ? '<span style="font-size:10px;color:#aaa;margin-left:6px">'+t.dueDate.slice(5).replace('-','/')+'</span>' : '';
+      html+='<div class="ti-wrap" style="opacity:.7"><div class="ti">'
+        +'<div class="ck '+(t.done?'y':'')+'" onclick="togT('+t.id+')"></div>'
+        +'<div class="t-main"><div class="ttext '+(t.done?'done':'')+'">'+t.text+dlbl+'</div></div>'
+        +'</div></div>';
+    });
+    html+='</div>';
+  }
+
   // 미완료 항목 (오늘 할일 바로 아래)
   if(allOverdue.length){
     html+='<div style="font-size:12px;font-weight:700;color:#ff4d6d;padding:10px 4px 6px;border-top:1px dashed #ffd0d0;margin-top:6px">⚠️ 미완료 ('+allOverdue.length+'건) — 체크해주세요</div>';
@@ -1761,7 +1772,14 @@ function renderTodos(){
       html+='<div onclick="quickAddTodoForDate(\''+date+'\')" style="font-size:12px;color:#bbb;padding:8px 10px;border:1.5px dashed #e8e8e4;border-radius:8px;cursor:pointer;text-align:center;margin-bottom:6px">+ 이 날짜에 할일 추가</div></div>';
       return;
     }
-    html+='<div style="margin-bottom:4px"><div style="font-size:12px;font-weight:800;color:#555;padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #eee;margin-bottom:6px"><span>'+dateLabel(date)+'</span><span style="font-size:11px;font-weight:600;color:#aaa">'+items.filter(t=>t.done).length+'/'+items.length+' 완료</span></div>';
+    // 해당 날짜의 지난 완료 항목도 토글로 추가 표시 가능 (미래 날짜라도 완료된 게 있다면)
+    const dateDone = items.filter(t=>t.done);
+    const dateActive = items.filter(t=>!t.done);
+    html+='<div style="margin-bottom:4px"><div style="font-size:12px;font-weight:800;color:#555;padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #eee;margin-bottom:6px">'
+      +'<span>'+dateLabel(date)+'</span>'
+      +'<span style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;color:#aaa">'+dateDone.length+'/'+items.length+' 완료</span>'
+      +'<button onclick="quickAddTodoForDate(\''+date+'\')" style="background:#1a9e60;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;font-family:inherit">+</button></span>'
+      +'</div>';
     html+=items.map(t=>{
       const sd=t.subs.filter(s=>s.done).length,st=t.subs.length,isOpen=openTodoId===t.id;
       let timeBadge='';
@@ -1919,22 +1937,34 @@ function deleteTodoPermanent(id){
 }
 
 function addTodo(){openTodoModal();} // kept for compatibility — openTodoModal() is used
-// 특정 날짜에 빠른 할일 추가
+// 특정 날짜에 빠른 할일 추가 + 캘린더 자동 연동
 function quickAddTodoForDate(ymd){
   const text = prompt(ymd + ' 할일을 입력하세요');
   if(!text || !text.trim()) return;
+  const t = text.trim();
+  const id = Date.now();
   allTodos.push({
-    id: Date.now(),
-    text: text.trim(),
-    done: false,
-    subs: [],
-    note: '',
-    category: 'personal',
-    dueDate: ymd,
-    dueTime: '',
-    createdDate: todayStr()
+    id, text: t, done: false, subs: [], note: '',
+    category: 'personal', dueDate: ymd, dueTime: '', createdDate: todayStr()
   });
   saveTodos();
+  // 캘린더에도 자동 등록
+  if(typeof schedules!=='undefined' && Array.isArray(schedules)){
+    schedules.push({
+      id: id+1, // 충돌 방지 위해 +1
+      date: ymd,
+      title: t,
+      start: '',
+      end: '',
+      color: '#1a9e60',
+      memo: '',
+      repeat: '',
+      _fromTodo: true,
+      _todoId: id
+    });
+    if(typeof saveScheds==='function') saveScheds();
+    if(typeof renderCal==='function') renderCal();
+  }
   renderTodos();
 }
 function togT(id){
