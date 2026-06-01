@@ -1711,15 +1711,28 @@ function renderTodos(){
   }
   html+='</div>';
 
-  // ── 섹션 2: 미래 날짜 ──
+  // ── 섹션 2: 미래 날짜 (향후 14일 자동 표시) ──
+  // 향후 14일 빈 슬롯도 표시
+  const todayD = new Date(nowStr+'T00:00:00');
+  for(let i=1; i<=14; i++){
+    const dt = new Date(todayD);
+    dt.setDate(todayD.getDate()+i);
+    const ymd = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+    if(!groups[ymd]) groups[ymd] = []; // 빈 그룹이라도 헤더 표시
+  }
   const futureDates=Object.keys(groups).filter(d=>d!==nowStr).sort((a,b)=>{
     if(a==='날짜없음')return 1;
     if(b==='날짜없음')return -1;
     return a.localeCompare(b);
   });
   futureDates.forEach(date=>{
-    const items=groups[date];
-    if(!items||!items.length)return;
+    const items=groups[date]||[];
+    // 빈 그룹도 헤더 + 안내 노출
+    if(!items.length){
+      html+='<div style="margin-bottom:4px"><div style="font-size:12px;font-weight:800;color:#555;padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #eee;margin-bottom:6px"><span>'+dateLabel(date)+'</span><span style="font-size:11px;font-weight:600;color:#bbb">할일 없음</span></div>';
+      html+='<div onclick="quickAddTodoForDate(\''+date+'\')" style="font-size:12px;color:#bbb;padding:8px 10px;border:1.5px dashed #e8e8e4;border-radius:8px;cursor:pointer;text-align:center;margin-bottom:6px">+ 이 날짜에 할일 추가</div></div>';
+      return;
+    }
     html+='<div style="margin-bottom:4px"><div style="font-size:12px;font-weight:800;color:#555;padding:10px 4px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #eee;margin-bottom:6px"><span>'+dateLabel(date)+'</span><span style="font-size:11px;font-weight:600;color:#aaa">'+items.filter(t=>t.done).length+'/'+items.length+' 완료</span></div>';
     html+=items.map(t=>{
       const sd=t.subs.filter(s=>s.done).length,st=t.subs.length,isOpen=openTodoId===t.id;
@@ -1878,6 +1891,24 @@ function deleteTodoPermanent(id){
 }
 
 function addTodo(){openTodoModal();} // kept for compatibility — openTodoModal() is used
+// 특정 날짜에 빠른 할일 추가
+function quickAddTodoForDate(ymd){
+  const text = prompt(ymd + ' 할일을 입력하세요');
+  if(!text || !text.trim()) return;
+  allTodos.push({
+    id: Date.now(),
+    text: text.trim(),
+    done: false,
+    subs: [],
+    note: '',
+    category: 'personal',
+    dueDate: ymd,
+    dueTime: '',
+    createdDate: todayStr()
+  });
+  saveTodos();
+  renderTodos();
+}
 function togT(id){
   allTodos=allTodos.map(t=>{if(t.id!==id)return t;const done=!t.done;return{...t,done,completedDate:done?todayStr():null};});
   saveTodos();renderTodos();
