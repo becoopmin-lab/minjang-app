@@ -659,17 +659,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
       </div>
 
 
-      <!-- 메모 -->
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div class="sec" style="margin-bottom:0">📝 메모</div>
-          <button onclick="saveMemo()" style="height:28px;padding:0 12px;background:#1a9e60;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">저장</button>
-        </div>
-        <textarea id="memo-area" placeholder="자유롭게 메모하세요..." 
-          style="width:100%;min-height:140px;border:1.5px solid #e8e8e4;border-radius:12px;padding:12px;font-size:14px;font-family:inherit;outline:none;background:#f8f8f4;color:#111;resize:none;line-height:1.6"
-          oninput="autoSaveMemo()"></textarea>
-        <div style="font-size:11px;color:#aaa;margin-top:6px;text-align:right" id="memo-saved-lbl"></div>
-      </div>
+      <!-- 메모 카드는 할일 탭 맨 아래로 이동됨 -->
 
       <!-- 빠른 메뉴 -->
       <div class="card" style="padding:12px">
@@ -704,7 +694,16 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
         <div class="card">
           <div id="t-list"></div>
         </div>
-
+        <!-- 자유 메모 (할일 맨 아래) -->
+        <div class="card" style="margin-top:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="sec" style="margin-bottom:0">📝 메모</div>
+            <span style="font-size:11px;color:#aaa" id="memo-saved-lbl"></span>
+          </div>
+          <textarea id="memo-area" placeholder="자유롭게 메모하세요... (자동저장)"
+            style="width:100%;min-height:140px;border:1.5px solid #e8e8e4;border-radius:12px;padding:12px;font-size:14px;font-family:inherit;outline:none;background:#fffdf3;color:#111;resize:vertical;line-height:1.6"
+            oninput="autoSaveMemo()"></textarea>
+        </div>
       </div>
 
       <!-- 주월간 기록 뷰 (위: 주간 / 아래: 월간) -->
