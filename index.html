@@ -695,7 +695,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
     <div class="tab on" id="tab-todo">
       <div class="todo-vsw">
         <button class="tvsw on" id="tvs-today" onclick="setTodoView('today',this)">오늘 할 일</button>
-        <button class="tvsw" id="tvs-month" onclick="setTodoView('month',this)">월간 기록</button>
+        <button class="tvsw" id="tvs-month" onclick="setTodoView('month',this)">주월간 기록</button>
         <button class="tvsw" id="tvs-year" onclick="setTodoView('year',this)">연간 요약</button>
       </div>
 
@@ -707,9 +707,23 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 
       </div>
 
-      <!-- 월간 기록 뷰 -->
+      <!-- 주월간 기록 뷰 (위: 주간 / 아래: 월간) -->
       <div id="tv-month" style="display:none">
+        <!-- 주간 기록 -->
         <div class="card">
+          <div style="font-size:13px;font-weight:800;color:#1a9e60;margin-bottom:10px">📆 주간 기록</div>
+          <div class="hist-nav">
+            <button onclick="moveHistWeek(-1)">&#8249;</button>
+            <span class="hist-period" id="hw-title"></span>
+            <button onclick="moveHistWeek(1)">&#8250;</button>
+          </div>
+          <div id="hw-summary"></div>
+          <div class="prog-wrap" style="margin:0 0 14px"><div class="prog-fill" id="hw-prog" style="width:0%"></div></div>
+          <div id="hw-list"></div>
+        </div>
+        <!-- 월간 기록 -->
+        <div class="card" style="margin-top:14px">
+          <div style="font-size:13px;font-weight:800;color:#1a9e60;margin-bottom:10px">🗓️ 월간 기록</div>
           <div class="hist-nav">
             <button onclick="moveHistMonth(-1)">&#8249;</button>
             <span class="hist-period" id="hm-title"></span>
@@ -1513,7 +1527,7 @@ function setTodoView(v,btn){
 }
 function renderCurrentTodoView(){
   if(todoViewMode==='today')renderTodos();
-  else if(todoViewMode==='month')renderHistMonth();
+  else if(todoViewMode==='month'){ renderHistWeek(); renderHistMonth(); }
   else renderHistYear();
 }
 
@@ -1553,31 +1567,21 @@ function renderTodos(){
     const d=t.dueDate||'날짜없음';
     if(addedIds.has(t.id))return;
     addedIds.add(t.id);
-    if(d!=='날짜없음' && d<nowStr){
-      // 과거 날짜
-      if(!t.done && !t.archived){
-        overdueItems.push(t);
-      } else if(t.done){
-        if(!pastGroups[d])pastGroups[d]=[];
-        pastGroups[d].push(t);
-      }
-    } else if(d==='날짜없음' && !t.done && !t.archived){
-      // 날짜 없는 미완료 → createdDate 기준
-      const created=t.createdDate||nowStr;
-      if(created<nowStr){
-        overdueItems.push(t);
-      } else {
-        if(!groups[d])groups[d]=[];
-        groups[d].push(t);
-      }
-    } else if(d===nowStr && !t.done && t.dueTime){
-      // 오늘 날짜인데 시간이 과거인 항목 → 오늘 할일로 유지
-      if(!groups[d])groups[d]=[];
-      groups[d].push(t);
-    } else {
-      if(!groups[d])groups[d]=[];
-      groups[d].push(t);
+    // 완료된 항목은 무조건 지난 완료로 (날짜 상관없이)
+    if(t.done){
+      const dk = t.dueDate || t.completedDate || nowStr;
+      if(!pastGroups[dk])pastGroups[dk]=[];
+      pastGroups[dk].push(t);
+      return;
     }
+    // 과거 미완료 → 미완료 알림
+    if(d!=='날짜없음' && d<nowStr){
+      if(!t.archived) overdueItems.push(t);
+      return;
+    }
+    // 날짜없음 + 오늘 + 미래 미완료 → 날짜별 그룹 (그대로)
+    if(!groups[d])groups[d]=[];
+    groups[d].push(t);
   });
   // 오늘+미래 정렬: 오늘 먼저
   const sortedDates=Object.keys(groups).sort((a,b)=>{
@@ -1591,7 +1595,7 @@ function renderTodos(){
   const sortedPastDates=Object.keys(pastGroups).sort((a,b)=>b.localeCompare(a));
   
   const dateLabel=(d)=>{
-    if(d==='날짜없음')return '날짜 미정';
+    if(d==='날짜없음')return '📝 메모';
     const dt=new Date(d+'T00:00:00');
     const month=dt.getMonth()+1;
     const day=dt.getDate();
@@ -2004,6 +2008,59 @@ function renderTodoCh(){
 
 /* ══ HISTORY - MONTH ══ */
 function moveHistMonth(dir){histMonth+=dir;if(histMonth<0){histMonth=11;histYear--;}if(histMonth>11){histMonth=0;histYear++;}renderHistMonth();}
+
+/* ══ HISTORY - WEEK ══ */
+let histWeekStart = null; // 주의 일요일 (Date)
+function _startOfWeek(d){ const x=new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate()-x.getDay()); return x; }
+function moveHistWeek(dir){
+  if(!histWeekStart) histWeekStart = _startOfWeek(new Date());
+  histWeekStart.setDate(histWeekStart.getDate() + dir*7);
+  renderHistWeek();
+}
+function renderHistWeek(){
+  if(!histWeekStart) histWeekStart = _startOfWeek(new Date());
+  const start = new Date(histWeekStart);
+  const end = new Date(histWeekStart); end.setDate(end.getDate()+6);
+  const fmt = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const startK = fmt(start), endK = fmt(end);
+  document.getElementById('hw-title').textContent = `${start.getMonth()+1}/${start.getDate()} ~ ${end.getMonth()+1}/${end.getDate()}`;
+  const list = allTodos.filter(t=>t.createdDate && t.createdDate>=startK && t.createdDate<=endK);
+  const done = list.filter(t=>t.done).length, total = list.length;
+  const pct = total? Math.round(done/total*100) : 0;
+  document.getElementById('hw-prog').style.width = pct+'%';
+  if(!total){
+    document.getElementById('hw-summary').innerHTML='<p class="empty" style="padding:12px 0">이 주에 기록된 할 일이 없어요</p>';
+    document.getElementById('hw-list').innerHTML=''; return;
+  }
+  document.getElementById('hw-summary').innerHTML = `
+    <div class="hist-summary-row">
+      <div class="hist-rate-big">${pct}%</div>
+      <div class="hist-info">
+        <div class="hist-info-title">주간 완료율</div>
+        <div class="hist-info-sub">${total}개 중 ${done}개 완료 · ${total-done}개 미완료</div>
+      </div>
+    </div>`;
+  const dows=['일','월','화','수','목','금','토'];
+  const byDate={};
+  list.forEach(t=>{const d=t.createdDate;if(!byDate[d])byDate[d]=[];byDate[d].push(t);});
+  let html='';
+  for(let i=0;i<7;i++){
+    const dt = new Date(start); dt.setDate(start.getDate()+i);
+    const dk = fmt(dt);
+    const items = byDate[dk]||[];
+    if(items.length===0) continue;
+    const ddone = items.filter(t=>t.done).length;
+    html += `<div class="hist-group-title"><span>${dt.getMonth()+1}월 ${dt.getDate()}일 (${dows[dt.getDay()]})</span><span style="color:#1a9e60">${ddone}/${items.length} 완료</span></div>`;
+    items.forEach(t=>{
+      html += `<div class="hist-item">
+        <div class="hist-dot" style="background:${t.done?'#1a9e60':'#e0e0e0'}"></div>
+        <span class="hist-text ${t.done?'done':''}">${t.text}</span>
+        <span style="font-size:13px;color:${t.done?'#1a9e60':'#ccc'}">${t.done?'✓':'○'}</span>
+      </div>`;
+    });
+  }
+  document.getElementById('hw-list').innerHTML = html;
+}
 
 function renderHistMonth(){
   const ym=histYear+'-'+String(histMonth+1).padStart(2,'0');
