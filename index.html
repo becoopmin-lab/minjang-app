@@ -829,6 +829,11 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
           </div>
         </div>
         <div class="card">
+          <div class="hist-nav" style="margin-bottom:12px">
+            <button onclick="moveDailyMonth(-1)">&#8249;</button>
+            <span class="hist-period" id="ed-title"></span>
+            <button onclick="moveDailyMonth(1)">&#8250;</button>
+          </div>
           <div id="e-store-summary"></div>
           <div class="sec" style="margin-top:4px">지출 내역</div>
           <div id="e-list"></div>
@@ -1411,6 +1416,7 @@ function saveFixed(){SS('mj_v2_fixed_exps',fixedExps);scheduleSync();}
 let currentStore='all';
 let expView='daily';
 let expYear=new Date().getFullYear(),expMonth=new Date().getMonth();
+let dvYear=new Date().getFullYear(),dvMonth=new Date().getMonth();
 let emChart=null,eyChart=null;
 let selectedExpCat='식비';
 let selectedExpStore='비쿱';
@@ -2174,20 +2180,26 @@ function renderCurrentExpView(){
 }
 
 function renderExps(){
+  // 선택한 달만 (월별로 끊어서 표시)
+  const ym=dvYear+'-'+String(dvMonth+1).padStart(2,'0');
+  const titleEl=document.getElementById('ed-title');
+  if(titleEl)titleEl.textContent=dvYear+'년 '+MONTHS[dvMonth];
+  const monthExps=exps.filter(e=>e.date&&e.date.startsWith(ym));
+
   // Store summary
   const sumEl=document.getElementById('e-store-summary');
   if(currentStore==='all'){
-    const storeTotals=STORES.map(s=>({s,amt:exps.filter(e=>e.store===s).reduce((a,e)=>a+e.amt,0)})).filter(x=>x.amt>0);
+    const storeTotals=STORES.map(s=>({s,amt:monthExps.filter(e=>e.store===s).reduce((a,e)=>a+e.amt,0)})).filter(x=>x.amt>0);
     sumEl.innerHTML=storeTotals.length?`<div class="store-sum">${storeTotals.map(x=>`<div class="store-sum-card"><div class="store-sum-name">${x.s}</div><div class="store-sum-amt" style="color:${storeColor[x.s]}">₩${x.amt.toLocaleString()}</div></div>`).join('')}</div>`:'';
   }else{
-    const tot=exps.filter(e=>e.store===currentStore).reduce((a,e)=>a+e.amt,0);
-    sumEl.innerHTML=`<div style="padding:12px 14px;background:rgba(26,158,96,.08);border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:#111111">${currentStore} 총 지출</span><span style="font-size:20px;font-weight:900;color:${storeColor[currentStore]}">₩${tot.toLocaleString()}</span></div>`;
+    const tot=monthExps.filter(e=>e.store===currentStore).reduce((a,e)=>a+e.amt,0);
+    sumEl.innerHTML=`<div style="padding:12px 14px;background:rgba(26,158,96,.08);border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:#111111">${currentStore} ${MONTHS[dvMonth]} 지출</span><span style="font-size:20px;font-weight:900;color:${storeColor[currentStore]}">₩${tot.toLocaleString()}</span></div>`;
   }
 
   const el=document.getElementById('e-list');
-  let list=[...exps].reverse();
+  let list=[...monthExps].reverse();
   if(currentStore!=='all')list=list.filter(e=>e.store===currentStore);
-  if(!list.length){el.innerHTML='<p class="empty">지출을 기록해보세요!</p>';return;}
+  if(!list.length){el.innerHTML='<p class="empty">'+MONTHS[dvMonth]+' 지출 내역이 없어요</p>';return;}
   el.innerHTML=list.map(e=>`
     <div class="ei">
       <span class="ctag" style="background:${catBg[e.cat]||'rgba(138,141,150,.15)'};color:${catColor[e.cat]||'#8a8d96'}">${e.cat}</span>
@@ -2253,12 +2265,16 @@ function closeExpEditModalBg(e){
   if(e.target===document.getElementById('exp-edit-modal-bg'))closeExpEditModal();
 }
 
+function moveDailyMonth(dir){dvMonth+=dir;if(dvMonth<0){dvMonth=11;dvYear--;}if(dvMonth>11){dvMonth=0;dvYear++;}renderExps();}
+
 function addExp(){
   const d=document.getElementById('e-desc').value.trim();
   const a=parseInt(document.getElementById('e-amt').value);
   if(!d||!a||isNaN(a)){alert('내용과 금액을 입력해주세요!');return;}
   exps.push({id:Date.now(),desc:d,cat:selectedExpCat,amt:a,date:todayStr(),store:selectedExpStore});
   document.getElementById('e-desc').value='';document.getElementById('e-amt').value='';
+  // 새 지출은 오늘 날짜 → 이번 달 화면으로 이동해 바로 보이게
+  dvYear=new Date().getFullYear();dvMonth=new Date().getMonth();
   saveExps();renderExps();
 }
 function delE(id){exps=exps.filter(e=>e.id!==id);saveExps();renderExps();}
