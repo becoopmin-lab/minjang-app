@@ -539,7 +539,7 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
 
 
 <!-- 직원용 화면 -->
-<div class="staff-view" id="staff-view">
+<div class="staff-view" id="staff-view" style="display:none">
   <div class="hdr">
     <div><h1>📨 업무 요청</h1><div class="sub" id="staff-hdr-date"></div></div>
     <button onclick="logoutStaff()" style="background:#f0f0eb;border:1px solid #e8e8e4;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:#666;cursor:pointer;font-family:inherit">← 나가기</button>
@@ -3591,6 +3591,12 @@ const hdrTitleEl=document.getElementById('hdr-title');
 if(hdrTitleEl)hdrTitleEl.textContent='할 일';
 // ===== 자동 로그인 (URL 파라미터 우선 → 마지막 로그인 → 민장) =====
 (function autoLoginFromUrl(){
+  // 모든 진입 케이스에서 landing-screen·staff-view를 강제 숨김 (잔여 표시 방지)
+  try {
+    const ls = document.getElementById('landing-screen'); if(ls) ls.style.display='none';
+    const sv = document.getElementById('staff-view'); if(sv) sv.style.display='none';
+    const ad = document.getElementById('admin-app'); if(ad) ad.style.display='flex';
+  } catch(e){}
   try {
     // 1. URL 파라미터 우선
     const params = new URLSearchParams(location.search);
