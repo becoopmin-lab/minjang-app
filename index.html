@@ -2184,19 +2184,59 @@ function renderExps(){
   }
 
   const el=document.getElementById('e-list');
-  let list=[...exps].reverse();
+  let list=[...exps];
   if(currentStore!=='all')list=list.filter(e=>e.store===currentStore);
   if(!list.length){el.innerHTML='<p class="empty">지출을 기록해보세요!</p>';return;}
-  el.innerHTML=list.map(e=>`
-    <div class="ei">
-      <span class="ctag" style="background:${catBg[e.cat]||'rgba(138,141,150,.15)'};color:${catColor[e.cat]||'#8a8d96'}">${e.cat}</span>
-      <span class="edesc">${e.desc}</span>
-      <span style="font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;background:rgba(255,255,255,.07);color:${storeColor[e.store]||'#8a8d96'}">${e.store||'개인'}</span>
-      <span class="eamt">₩${e.amt.toLocaleString()}</span>
-      <span class="edate-lbl">${e.date?e.date.slice(5).replace('-','/'):'오늘'}</span>
-      <button class="dbtn" onclick="editExp(${e.id})" style="color:#1a9e60">✏️</button>
-      <button class="dbtn" onclick="delE(${e.id})">✕</button>
-    </div>`).join('');
+
+  // 월별 그룹핑 (최근 달 먼저)
+  const byMonth = {};
+  list.forEach(e=>{
+    const ym = (e.date||'미정').slice(0,7) || '미정';
+    if(!byMonth[ym]) byMonth[ym] = [];
+    byMonth[ym].push(e);
+  });
+  const sortedMonths = Object.keys(byMonth).sort((a,b)=>b.localeCompare(a));
+  const currentYM = new Date().toISOString().slice(0,7);
+  // 펼침 상태 메모리 (사용자가 이번 세션에 펼친 달)
+  if(typeof window._expOpenMonths==='undefined') window._expOpenMonths = new Set([currentYM]);
+
+  let html = '';
+  sortedMonths.forEach(ym=>{
+    const items = byMonth[ym].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const monthTotal = items.reduce((s,e)=>s+(e.amt||0),0);
+    const isOpen = window._expOpenMonths.has(ym);
+    const ymLabel = ym==='미정' ? '날짜 미정' : (parseInt(ym.slice(0,4))+'년 '+parseInt(ym.slice(5,7))+'월');
+    html += `<div style="margin-bottom:10px;border:1px solid #e8e8e4;border-radius:12px;background:#fff;overflow:hidden">
+      <div onclick="toggleExpMonth('${ym}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;background:${isOpen?'rgba(26,158,96,.06)':'#fafaf6'};border-bottom:${isOpen?'1px solid #e8e8e4':'none'}">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:14px;font-weight:800;color:#1a9e60">${ymLabel}</span>
+          <span style="font-size:11px;color:#888">${items.length}건</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:14px;font-weight:800;color:#111">₩${monthTotal.toLocaleString()}</span>
+          <span style="color:#aaa;font-size:13px">${isOpen?'▴':'▾'}</span>
+        </div>
+      </div>
+      ${isOpen ? '<div style="padding:6px 10px">'+items.map(e=>`
+        <div class="ei">
+          <span class="ctag" style="background:${catBg[e.cat]||'rgba(138,141,150,.15)'};color:${catColor[e.cat]||'#8a8d96'}">${e.cat}</span>
+          <span class="edesc">${e.desc}</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;background:rgba(255,255,255,.07);color:${storeColor[e.store]||'#8a8d96'}">${e.store||'개인'}</span>
+          <span class="eamt">₩${e.amt.toLocaleString()}</span>
+          <span class="edate-lbl">${e.date?e.date.slice(5).replace('-','/'):'오늘'}</span>
+          <button class="dbtn" onclick="editExp(${e.id})" style="color:#1a9e60">✏️</button>
+          <button class="dbtn" onclick="delE(${e.id})">✕</button>
+        </div>`).join('')+'</div>' : ''}
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function toggleExpMonth(ym){
+  if(typeof window._expOpenMonths==='undefined') window._expOpenMonths = new Set();
+  if(window._expOpenMonths.has(ym)) window._expOpenMonths.delete(ym);
+  else window._expOpenMonths.add(ym);
+  renderExps();
 }
 
 let editingExpId=null;
