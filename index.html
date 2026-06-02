@@ -803,29 +803,25 @@ body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;b
           <div class="row">
             <input type="text" id="e-desc" placeholder="내용 (예: 점심식사)">
           </div>
-          <div style="display:flex;gap:6px;margin-bottom:8px">
-            <select id="ec-select" onchange="selectExpCat(this.value,null)" style="flex:1;height:40px;border:1px solid #d8d8d4;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:#111;outline:none">
-              <option value="식비">🍚 식비</option>
-              <option value="교통">🚌 교통</option>
-              <option value="쇼핑">🛍️ 쇼핑</option>
-              <option value="카페">☕ 카페</option>
-              <option value="기타">📦 기타</option>
-            </select>
-            <button onclick="showAddCatInput()" style="height:40px;padding:0 12px;background:#f0f0eb;border:1px solid #d8d8d4;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;color:#666;font-weight:700">+ 추가</button>
+          <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap" id="cat-chip-row">
+            <button class="cat-chip sel" id="ec-식비" onclick="selectExpCat('식비',this)">🍚 식비</button>
+            <button class="cat-chip" id="ec-교통" onclick="selectExpCat('교통',this)">🚌 교통</button>
+            <button class="cat-chip" id="ec-쇼핑" onclick="selectExpCat('쇼핑',this)">🛍️ 쇼핑</button>
+            <button class="cat-chip" id="ec-카페" onclick="selectExpCat('카페',this)">☕ 카페</button>
+            <button class="cat-chip" id="ec-기타" onclick="selectExpCat('기타',this)">📦 기타</button>
+            <button class="cat-chip" onclick="showAddCatInput()" id="ec-add-btn">➕ 추가</button>
           </div>
           <div id="add-cat-row" style="display:none;gap:6px;margin-bottom:8px;align-items:center">
             <input type="text" id="new-cat-input" placeholder="카테고리 이름" style="flex:1;height:34px;border:1px solid #ddd;border-radius:10px;padding:0 10px;font-size:13px;font-family:inherit;outline:none">
             <button onclick="addCustomCat()" style="height:34px;padding:0 12px;background:#1a9e60;color:#fff;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700">추가</button>
             <button onclick="document.getElementById('add-cat-row').style.display='none'" style="height:34px;padding:0 10px;background:#f0f0eb;color:#888;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">취소</button>
           </div>
-          <div style="margin-bottom:10px">
-            <select id="es-select" onchange="selectExpStore(this.value,null)" style="width:100%;height:40px;border:1px solid #d8d8d4;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:#111;outline:none">
-              <option value="비쿱">✂️ 비쿱</option>
-              <option value="제니스">💈 제니스</option>
-              <option value="중산">🪮 중산</option>
-              <option value="마샬">💇 마샬</option>
-              <option value="개인" selected>👤 개인</option>
-            </select>
+          <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+            <button class="store-chip sel" id="es-비쿱" onclick="selectExpStore('비쿱',this)" style="--sc:#1a9e60">✂️ 비쿱</button>
+            <button class="store-chip" id="es-제니스" onclick="selectExpStore('제니스',this)" style="--sc:#5b9cf6">💈 제니스</button>
+            <button class="store-chip" id="es-중산" onclick="selectExpStore('중산',this)" style="--sc:#ffb347">🪮 중산</button>
+            <button class="store-chip" id="es-마샬" onclick="selectExpStore('마샬',this)" style="--sc:#ff4d6d">💇 마샬</button>
+            <button class="store-chip" id="es-개인" onclick="selectExpStore('개인',this)" style="--sc:#a769ff">👤 개인</button>
           </div>
           <div class="row">
             <input type="number" id="e-amt" placeholder="금액 (원)">
@@ -1428,44 +1424,31 @@ function addCustomCat(){
   const inp=document.getElementById('new-cat-input');
   const name=inp.value.trim();
   if(!name)return;
-  // select에 옵션 추가
-  const sel = document.getElementById('ec-select');
-  if(sel && ![...sel.options].some(o=>o.value===name)){
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = '🏷️ '+name;
-    sel.appendChild(opt);
-  }
-  selectExpCat(name, null);
+  // Add button to chip row
+  const row=document.getElementById('cat-chip-row');
+  const addBtn=document.getElementById('ec-add-btn');
+  const btn=document.createElement('button');
+  btn.className='cat-chip';
+  btn.id='ec-'+name;
+  btn.textContent='🏷️ '+name;
+  btn.onclick=function(){selectExpCat(name,this);};
+  row.insertBefore(btn, addBtn);
+  // Select it
+  selectExpCat(name, btn);
+  // Hide input
   inp.value='';
   document.getElementById('add-cat-row').style.display='none';
 }
 
 function selectExpCat(cat,btn){
   selectedExpCat=cat;
-  // select element 동기화
-  const sel = document.getElementById('ec-select');
-  if(sel && sel.value!==cat){
-    // 기존 옵션에 없으면 추가
-    if(![...sel.options].some(o=>o.value===cat)){
-      const opt=document.createElement('option'); opt.value=cat; opt.textContent=cat;
-      sel.appendChild(opt);
-    }
-    sel.value=cat;
-  }
-  if(btn && btn.classList){
-    document.querySelectorAll('.cat-chip').forEach(b=>b.classList.remove('sel'));
-    btn.classList.add('sel');
-  }
+  document.querySelectorAll('.cat-chip').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
 }
 function selectExpStore(store,btn){
   selectedExpStore=store;
-  const sel = document.getElementById('es-select');
-  if(sel && sel.value!==store) sel.value=store;
-  if(btn && btn.classList){
-    document.querySelectorAll('.store-chip[id^="es-"]').forEach(b=>b.classList.remove('sel'));
-    btn.classList.add('sel');
-  }
+  document.querySelectorAll('.store-chip[id^="es-"]').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
 }
 function selectFixedStore(store,btn){
   selectedFixedStore=store;
