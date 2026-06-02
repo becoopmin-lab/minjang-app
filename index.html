@@ -2173,14 +2173,19 @@ function renderCurrentExpView(){
 }
 
 function renderExps(){
-  // Store summary
+  // Store summary — 이번 달(YYYY-MM)만 합산
   const sumEl=document.getElementById('e-store-summary');
+  const currentYM = new Date().toISOString().slice(0,7);
+  const thisMonth = (e) => (e.date||'').startsWith(currentYM);
+  const monthLabel = parseInt(currentYM.slice(5,7))+'월';
   if(currentStore==='all'){
-    const storeTotals=STORES.map(s=>({s,amt:exps.filter(e=>e.store===s).reduce((a,e)=>a+e.amt,0)})).filter(x=>x.amt>0);
-    sumEl.innerHTML=storeTotals.length?`<div class="store-sum">${storeTotals.map(x=>`<div class="store-sum-card"><div class="store-sum-name">${x.s}</div><div class="store-sum-amt" style="color:${storeColor[x.s]}">₩${x.amt.toLocaleString()}</div></div>`).join('')}</div>`:'';
+    const storeTotals=STORES.map(s=>({s,amt:exps.filter(e=>e.store===s && thisMonth(e)).reduce((a,e)=>a+e.amt,0)})).filter(x=>x.amt>0);
+    sumEl.innerHTML = `<div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:700">📅 ${monthLabel} 매장별 지출</div>` +
+      (storeTotals.length?`<div class="store-sum">${storeTotals.map(x=>`<div class="store-sum-card"><div class="store-sum-name">${x.s}</div><div class="store-sum-amt" style="color:${storeColor[x.s]}">₩${x.amt.toLocaleString()}</div></div>`).join('')}</div>`
+      : `<div style="text-align:center;color:#bbb;font-size:12px;padding:14px 0;border:1px dashed #e8e8e4;border-radius:10px">${monthLabel} 지출 기록 없음</div>`);
   }else{
-    const tot=exps.filter(e=>e.store===currentStore).reduce((a,e)=>a+e.amt,0);
-    sumEl.innerHTML=`<div style="padding:12px 14px;background:rgba(26,158,96,.08);border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:#111111">${currentStore} 총 지출</span><span style="font-size:20px;font-weight:900;color:${storeColor[currentStore]}">₩${tot.toLocaleString()}</span></div>`;
+    const tot=exps.filter(e=>e.store===currentStore && thisMonth(e)).reduce((a,e)=>a+e.amt,0);
+    sumEl.innerHTML=`<div style="padding:12px 14px;background:rgba(26,158,96,.08);border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:#111111">${currentStore} ${monthLabel} 지출</span><span style="font-size:20px;font-weight:900;color:${storeColor[currentStore]}">₩${tot.toLocaleString()}</span></div>`;
   }
 
   const el=document.getElementById('e-list');
